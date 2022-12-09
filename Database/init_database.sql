@@ -6,21 +6,23 @@ CREATE TABLE IF NOT EXISTS list
 );
 
 -- Create the table representing items. Note that the quantity of items must be positive and each item
--- must have a unique name
+-- must have a unique name within a list
 CREATE TABLE IF NOT EXISTS item
 (
     item_id  INT PRIMARY KEY,
     list_id  INT REFERENCES list,
-    name     TEXT NOT NULL UNIQUE,
-    quantity INT  NOT NULL DEFAULT (1) CHECK (quantity > 0)
+    name     TEXT NOT NULL,
+    quantity INT  NOT NULL DEFAULT (1) CHECK (quantity > 0),
+    UNIQUE (list_id, name)
 );
 
--- Create the container table. Each container must have a unique name
+-- Create the container table. Each container must have a unique name within a list
 CREATE TABLE IF NOT EXISTS container
 (
     container_id INT PRIMARY KEY,
     list_id      INT REFERENCES list,
-    name         TEXT NOT NULL UNIQUE
+    name         TEXT NOT NULL,
+    UNIQUE (list_id, name)
 );
 
 -- Create the placement table. Each row represents a the placement of an item into a container. For example,

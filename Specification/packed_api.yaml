@@ -1,0 +1,254 @@
+openapi: 3.0.3
+info:
+  title: Packed API
+  description: Back-End API for Packed, a simple application for learning Contract Testing with Pact
+  version: 1.0.0
+servers:
+  - url: http://localhost:5024/
+    description: Local development server
+  - url: https://api.packed.io/
+    description: Production server
+tags:
+  - name: Lists
+    description: View and modify lists
+  - name: Items
+    description: Manage items and pack them into containers
+  - name: Containers
+    description: Manage and query the containers used to pack items
+paths:
+  /lists:
+    get:
+      tags:
+        - Lists
+      summary: Get all lists
+      description: >
+        Retrieve all lists which have been created. A list stores items and containers and
+        provides further access to both entities.
+      operationId: getAllLists
+      responses:
+        "200":
+          description: All lists are returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/List"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Lists
+      summary: Create a new list
+      description: >
+        Create a new list. Can specify the lists items and containers if they are known ahead of time.
+      operationId: addNewList
+      requestBody:
+        description: New list information
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/List"
+      responses:
+        "201":
+          description: The new list was created successfully, and a representation of the list is returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/List"
+            links:
+              # TODO: add links
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+components:
+  schemas:
+    List:
+      properties:
+        listId:
+          type: integer
+          description: A unique integer identifier for the list
+          readOnly: true
+          nullable: false
+        items:
+          type: array
+          description: All items currently in the list
+          readOnly: false
+          nullable: true
+          required: false
+          items:
+            $ref: "#/components/schemas/Item"
+        containers:
+          type: array
+          description: All containers currently in the list
+          readOnly: false
+          nullable: true
+          required: false
+          items:
+            $ref: "#/components/schemas/Container"
+    Item:
+      properties:
+        itemId:
+          type: integer
+          description: A unique integer identifier for the item
+          readOnly: true
+          nullable: false
+        name:
+          type: string
+          description: A description of the item. Descriptions must be unique inside a given list.
+          readOnly: false
+          nullable: false
+          required: true
+        quantity:
+          type: integer
+          description: The total quantity in the list for this particular item. Must be positive
+          readOnly: false
+          nullable: false
+          required: true
+          minimum: 1
+        placements:
+          type: array
+          description: All placements related to this item
+          readOnly: false
+          nullable: true
+          required: false
+          items:
+            $ref: "#/components/schemas/ItemPlacement"
+    ItemPlacement:
+      properties:
+        placementId:
+          type: integer
+          description: A unique integer identifier for the placement
+          readOnly: true
+          nullable: false
+        containerId:
+          type: integer
+          description: The container that the item was placed into
+          readOnly: false
+          nullable: false
+          required: true
+    Container:
+      properties:
+        containerId:
+          type: integer
+          description: A unique integer identifier for the container
+          readOnly: true
+          nullable: false
+        name:
+          type: string
+          description: The name of the container. Must be unique within a list.
+          readOnly: false
+          nullable: false
+          required: true
+    ApiError:
+      properties:
+        type:
+          type: string
+          format: uri
+          description: A URI which references the specific error type
+          example: "errors/InternalServerError"
+        title:
+          type: string
+          description: A short description of the error
+          example: "Internal Server Error"
+        status:
+          type: integer
+          description: The HTTP status code representing the error
+          example: 500
+        detail:
+          type: string
+          description: A longer description of the error with helpful information about the error
+          example: "An internal server error occurred during the processing of the request"
+        instance:
+          type: string
+          format: uri
+          description: The URI the user requested (for reference)
+          example: "https://api.packed.io/lists"
+        errorId:
+          type: string
+          format: uuid
+          description: A unique identifier for the error so that it may be located in error logs
+          example: "45001b4d-c4dd-4598-8548-260dc89f3088"
+        timestamp:
+          type: string
+          format: date-time
+          description: The time at which the error occurred
+          example: "2022-12-09T:17:55:55:555Z"
+  responses:
+    BadRequest:
+      description: The client made an improperly formatted request
+      content:
+        application/json:
+          schema:
+            $ref: "#components/schemas/ApiError"
+          example:
+            type: "errors/BadRequest"
+            title: "Bad Request"
+            status: 400
+            detail: "Client made an improperly formatted request"
+            instance: "https://api.packed.io/lists"
+            errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
+            timestamp: "2022-07-17T:17:55:59:130Z"
+    Unauthorized:
+      description: Client could not be identified
+      content:
+        application/json:
+          schema:
+            $ref: "#components/schemas/ApiError"
+          example:
+            type: "errors/Unauthorized"
+            title: "Unauthorized"
+            status: 401
+            detail: "Client could not be identifier. Re-authenticating may fix this error"
+            instance: "https://api.packed.io/lists"
+            errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
+            timestamp: "2022-07-17T:17:55:59:130Z"
+    NotFound:
+      description: The requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: "#components/schemas/ApiError"
+          example:
+            type: "errors/NotFound"
+            title: "Resource Not Found"
+            status: 404
+            detail: "The requested resource could not be located"
+            instance: "https://api.packed.io/lists/1"
+            errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
+            timestamp: "2022-07-17T:17:55:59:130Z"
+    Conflict:
+      description: An attempt to add or update an resource conflicts with another resource on the server
+      content:
+        application/json:
+          schema:
+            $ref: "#components/schemas/ApiError"
+          example:
+            type: "errors/Conflict"
+            title: "Resource Conflict"
+            status: 409
+            detail: "The provided resource conflicts with an existing resource on the server"
+            instance: "https://api.packed.io/lists/1"
+            errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
+            timestamp: "2022-07-17T:17:55:59:130Z"
+    InternalServerError:
+      description: The server encountered an error while processing the request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            type: "errors/InternalServerError"
+            title: "Internal Server Error"
+            status: 500
+            detail: "An internal server error occurred during the processing of the request"
+            instance: "https://api.packed.io/lists"
+            errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
+            timestamp: "2022-07-17T:17:55:59:130Z"
+
