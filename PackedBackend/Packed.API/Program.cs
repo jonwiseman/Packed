@@ -2,6 +2,7 @@
 // Created by: JSW
 
 using Microsoft.EntityFrameworkCore;
+using Packed.API.Services;
 using Packed.Data.Core.Repositories;
 using Packed.Data.EntityFramework;
 using Packed.Data.EntityFramework.Repositories;
@@ -15,8 +16,11 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<PackedDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PackedDatabase")));
 
-// Add list repository
+// Add repositories
 builder.Services.AddScoped<IListRepository, ListRepository>();
+
+// Add data service
+builder.Services.AddScoped<IPackedDataService, PackedDataService>();
 
 // Build app
 var app = builder.Build();

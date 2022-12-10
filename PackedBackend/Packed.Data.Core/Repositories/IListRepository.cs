@@ -20,5 +20,14 @@ namespace Packed.Data.Core.Repositories
         /// All lists
         /// </returns>
         Task<List<List>> GetAllListsAsync();
+
+        /// <summary>
+        /// Retrieve a specific list by ID
+        /// </summary>
+        /// <param name="listId">The ID of the list</param>
+        /// <returns>
+        /// The specified list or null if it does not exist
+        /// </returns>
+        Task<List> GetListByIdAsync(int listId);
     }
 }

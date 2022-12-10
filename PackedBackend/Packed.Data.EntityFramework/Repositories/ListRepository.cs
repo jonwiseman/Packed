@@ -32,13 +32,27 @@ public class ListRepository : RepositoryBase<List>, IListRepository
     /// </returns>
     public Task<List<List>> GetAllListsAsync()
     {
-        return Context
-            .Lists
+        return Context.Lists
             .Include(l => l.Items)
             .ThenInclude(i => i.Placements)
             .Include(l => l.Containers)
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Retrieve a specific list by ID
+    /// </summary>
+    /// <param name="listId">The ID of the list</param>
+    /// <returns>
+    /// The specified list or null if it does not exist
+    /// </returns>
+    public Task<List?> GetListByIdAsync(int listId)
+    {
+        return Context.Lists
+            .Include(l => l.Items)
+            .ThenInclude(i => i.Placements)
+            .Include(l => l.Containers)
+            .SingleOrDefaultAsync(l => l.Id == listId);
+    }
     #endregion METHODS
 }
