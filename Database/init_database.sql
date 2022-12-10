@@ -1,7 +1,7 @@
 -- Create the list table. Descriptions must be unique
 CREATE TABLE IF NOT EXISTS list
 (
-    list_id     INT PRIMARY KEY,
+    list_id     SERIAL PRIMARY KEY,
     description TEXT NOT NULL UNIQUE
 );
 
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS list
 -- must have a unique name within a list
 CREATE TABLE IF NOT EXISTS item
 (
-    item_id  INT PRIMARY KEY,
+    item_id  SERIAL PRIMARY KEY,
     list_id  INT REFERENCES list,
     name     TEXT NOT NULL,
     quantity INT  NOT NULL DEFAULT (1) CHECK (quantity > 0),
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS item
 -- Create the container table. Each container must have a unique name within a list
 CREATE TABLE IF NOT EXISTS container
 (
-    container_id INT PRIMARY KEY,
+    container_id SERIAL PRIMARY KEY,
     list_id      INT REFERENCES list,
     name         TEXT NOT NULL,
     UNIQUE (list_id, name)
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS container
 -- two rows in this table
 CREATE TABLE IF NOT EXISTS placement
 (
-    placement_id INT PRIMARY KEY,
+    placement_id SERIAL PRIMARY KEY,
     item_id      INT REFERENCES item,
     container_id INT REFERENCES container
 );

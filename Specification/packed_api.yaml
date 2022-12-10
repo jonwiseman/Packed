@@ -469,6 +469,8 @@ paths:
 components:
   schemas:
     List:
+      required:
+        - description
       properties:
         listId:
           type: integer
@@ -480,7 +482,6 @@ components:
           description: A description of the list
           readOnly: false
           nullable: false
-          required: true
         items:
           type: array
           description: All items currently in the list
@@ -496,6 +497,8 @@ components:
           items:
             $ref: "#/components/schemas/Container"
     Item:
+      required:
+        - name
       properties:
         itemId:
           type: integer
@@ -507,13 +510,11 @@ components:
           description: A description of the item. Descriptions must be unique inside a given list.
           readOnly: false
           nullable: false
-          required: true
         quantity:
           type: integer
           description: The total quantity in the list for this particular item. Must be positive
           readOnly: false
           nullable: false
-          required: true
           minimum: 1
         placements:
           type: array
@@ -523,6 +524,8 @@ components:
           items:
             $ref: "#/components/schemas/ItemPlacement"
     ItemPlacement:
+      required:
+        - containerId
       properties:
         placementId:
           type: integer
@@ -534,8 +537,9 @@ components:
           description: The container that the item was placed into
           readOnly: false
           nullable: false
-          required: true
     Container:
+      required:
+        - name
       properties:
         containerId:
           type: integer
@@ -547,7 +551,6 @@ components:
           description: The name of the container. Must be unique within a list.
           readOnly: false
           nullable: false
-          required: true
     ApiError:
       properties:
         type:
