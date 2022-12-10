@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Packed.Data.Core", "Packed.Data.Core\Packed.Data.Core.csproj", "{ECED22C4-EAF2-4627-8D56-D68AD6C5065F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Packed.Data.EntityFramework", "Packed.Data.EntityFramework\Packed.Data.EntityFramework.csproj", "{F1B1F111-2161-40F5-824E-3B5D29D1411A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{ECED22C4-EAF2-4627-8D56-D68AD6C5065F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ECED22C4-EAF2-4627-8D56-D68AD6C5065F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ECED22C4-EAF2-4627-8D56-D68AD6C5065F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1B1F111-2161-40F5-824E-3B5D29D1411A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1B1F111-2161-40F5-824E-3B5D29D1411A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1B1F111-2161-40F5-824E-3B5D29D1411A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1B1F111-2161-40F5-824E-3B5D29D1411A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
