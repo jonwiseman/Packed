@@ -140,7 +140,7 @@ paths:
       description: Delete the list which has the specified ID
       operationId: deleteListById
       responses:
-        "200":
+        "204":
           description: The list was deleted successfully
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -247,6 +247,225 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Item"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - Items
+      summary: Update an item's name and quantity
+      description: Update an existing item in a list. Note that only the item's name and quantity may be changed.
+      operationId: updateExistingItem
+      requestBody:
+        description: New representation of the item
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Item"
+      responses:
+        "200":
+          description: The item was successfully updated. A representation of the item is returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+          links:
+            GetUpdatedItem:
+              operationId: getItemById
+              parameters:
+                listId: "$request.path.listId"
+                itemId: "$request.path.itemId"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - Items
+      summary: Delete an item from a list
+      description: Remove a specific item from a list. Note that all placements will also be lost.
+      operationId: deleteExistingItem
+      responses:
+        "204":
+          description: The item was successfully deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /lists/{listId}/containers:
+    parameters:
+      - name: listId
+        in: path
+        description: Identity of the list
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+    get:
+      tags:
+        - Containers
+      summary: Get all existing containers
+      description: Retrieve all containers which currently exist for the given list
+      operationId: getAllContainersForList
+      responses:
+        "200":
+          description: All existing containers belonging to the specified list are returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Container"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Containers
+      summary: Add a new container
+      description: >
+        Add a new container with given name to the specified list. 
+        Note that container names must be unique within a list
+      operationId: addNewContainerToList
+      requestBody:
+        description: Information about the new container
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Container"
+      responses:
+        "201":
+          description: New container is created and a representation is returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Container"
+          links:
+            GetCreatedContainer:
+              operationId: getContainerById
+              parameters:
+                listId: "$request.path.listId"
+                containerId: "$response.body#/containerId"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /lists/{listId}/containers/{containerId}:
+    parameters:
+      - name: listId
+        in: path
+        description: Identity of the list
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      - name: containerId
+        in: path
+        description: Identity of the container
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+    get:
+      tags:
+        - Containers
+      summary: Get a specific container
+      description: Get information about a specific container in a specified list
+      operationId: getContainerById
+      responses:
+        "200":
+          description: Container is found and returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Container"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - Containers
+      summary: Update a container
+      description: Update an existing container in a list. Currently, only an update to the container's name is supported
+      operationId: updateContainerById
+      requestBody:
+        description: A representation of the updated container
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Container"
+      responses:
+        "200":
+          description: The container was found and updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Container"
+          links:
+            GetUpdatedContainer:
+              operationId: getContainerById
+              parameters:
+                listId: "$request.path.listId"
+                containerId: "$request.path.containerId"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - Containers
+      summary: Remove a container from a list
+      description: Remove the specified container from the given list. Note that all placements will be lost
+      operationId: removeContainerFromList
+      responses:
+        "204":
+          description: The container was found and removed
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 components:
   schemas:
     List:
