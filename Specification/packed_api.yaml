@@ -653,4 +653,11 @@ components:
             instance: "https://api.packed.io/lists"
             errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
             timestamp: "2022-07-17T:17:55:59:130Z"
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-PACKED-KEY
+security:
+  - ApiKey: []
 
