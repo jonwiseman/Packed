@@ -21,8 +21,8 @@ builder.Services.Configure<ApiBehaviorOptions>(opt => { opt.SuppressModelStateIn
 builder.Services.AddDbContext<PackedDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PackedDatabase")));
 
-// Add repositories
-builder.Services.AddScoped<IListRepository, ListRepository>();
+// Add unit of work
+builder.Services.AddScoped<IPackedUnitOfWork, PackedUnitOfWork>();
 
 // Add data service
 builder.Services.AddScoped<IPackedDataService, PackedDataService>();

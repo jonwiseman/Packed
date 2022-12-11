@@ -1,8 +1,6 @@
 // Date Created: 2022/12/10
 // Created by: JSW
 
-using System.Threading.Tasks;
-
 namespace Packed.Data.Core.Repositories
 {
     /// <summary>
@@ -28,21 +26,5 @@ namespace Packed.Data.Core.Repositories
         /// </summary>
         /// <param name="entity">Entity to delete</param>
         void Delete(T entity);
-
-        /// <summary>
-        /// Save all changes
-        /// </summary>
-        /// <returns>
-        /// The number of entities affected
-        /// </returns>
-        int SaveChanges();
-
-        /// <summary>
-        /// Save all changes (async overload)
-        /// </summary>
-        /// <returns>
-        /// The number of entities affected
-        /// </returns>
-        Task<int> SaveChangesAsync();
     }
 }

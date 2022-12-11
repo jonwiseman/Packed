@@ -54,28 +54,5 @@ public abstract class RepositoryBase<T> : IRepositoryBase<T>
     /// <param name="entity">Entity to delete</param>
     public void Delete(T entity) => Context.Set<T>().Remove(entity);
 
-
-    /// <summary>
-    /// Save all changes
-    /// </summary>
-    /// <returns>
-    /// The number of entities affected
-    /// </returns>
-    public int SaveChanges()
-    {
-        return Context.SaveChanges();
-    }
-
-    /// <summary>
-    /// Save all changes (async overload)
-    /// </summary>
-    /// <returns>
-    /// The number of entities affected
-    /// </returns>
-    public Task<int> SaveChangesAsync()
-    {
-        return Context.SaveChangesAsync();
-    }
-
     #endregion METHODS
 }

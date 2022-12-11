@@ -17,17 +17,21 @@ public class PackedDataService : IPackedDataService
     #region FIELDS
 
     /// <summary>
-    /// Repository for interacting with lists
+    /// Unit of work for interacting with Packed backend
     /// </summary>
-    private readonly IListRepository _listRepository;
+    private readonly IPackedUnitOfWork _unitOfWork;
 
     #endregion FIELDS
 
     #region CONSTRUCTORS
 
-    public PackedDataService(IListRepository listRepository)
+    /// <summary>
+    /// Create a new data service
+    /// </summary>
+    /// <param name="unitOfWork">Packed unit of work</param>
+    public PackedDataService(IPackedUnitOfWork unitOfWork)
     {
-        _listRepository = listRepository ?? throw new ArgumentNullException(nameof(listRepository));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     #endregion CONSTRUCTORS
@@ -43,7 +47,7 @@ public class PackedDataService : IPackedDataService
     public async Task<IEnumerable<ListDto>> GetAllListsAsync()
     {
         // Find all lists which exist in the database
-        var foundLists = (await _listRepository.GetAllListsAsync()) ?? new List<List>();
+        var foundLists = (await _unitOfWork.ListRepository.GetAllListsAsync()) ?? new List<List>();
 
         // Convert these list entities into DTO representations
         return foundLists
@@ -60,7 +64,7 @@ public class PackedDataService : IPackedDataService
     /// </returns>
     public async Task<ListDto> GetListByIdAsync(int listId)
     {
-        var foundList = await _listRepository.GetListByIdAsync(listId);
+        var foundList = await _unitOfWork.ListRepository.GetListByIdAsync(listId);
 
         if (foundList is null)
         {
@@ -91,10 +95,10 @@ public class PackedDataService : IPackedDataService
         try
         {
             // Create the entity in our context
-            _listRepository.Create(listToCreate);
+            _unitOfWork.ListRepository.Create(listToCreate);
 
             // Save all changes to database context
-            await _listRepository.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
         catch (Exception e)
         {
@@ -125,7 +129,7 @@ public class PackedDataService : IPackedDataService
     public async Task<ListDto> UpdateListAsync(int listId, ListDto updatedList)
     {
         // Start by finding the list which needs to be updated
-        var listToUpdate = await _listRepository.GetListByIdAsync(listId);
+        var listToUpdate = await _unitOfWork.ListRepository.GetListByIdAsync(listId);
 
         // If the list we are trying to update could not be found, throw an exception and let caller deal with it
         if (listToUpdate is null)
@@ -145,8 +149,8 @@ public class PackedDataService : IPackedDataService
         try
         {
             // ...and attempt to update the list
-            _listRepository.Update(listToUpdate);
-            await _listRepository.SaveChangesAsync();
+            _unitOfWork.ListRepository.Update(listToUpdate);
+            await _unitOfWork.SaveChangesAsync();
         }
         catch (Exception e)
         {
@@ -171,7 +175,7 @@ public class PackedDataService : IPackedDataService
     public async Task DeleteListAsync(int listId)
     {
         // Attempt to find the list
-        var foundList = await _listRepository.GetListByIdAsync(listId);
+        var foundList = await _unitOfWork.ListRepository.GetListByIdAsync(listId);
 
         // If we couldn't find the list, then throw a ListNotFoundException
         if (foundList is null)
@@ -180,8 +184,8 @@ public class PackedDataService : IPackedDataService
         }
 
         // If we found the list, then delete it
-        _listRepository.Delete(foundList);
-        await _listRepository.SaveChangesAsync();
+        _unitOfWork.ListRepository.Delete(foundList);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     /// <summary>
@@ -195,7 +199,7 @@ public class PackedDataService : IPackedDataService
     public async Task<List<ItemDto>> GetItemsForListAsync(int listId)
     {
         // Start by trying to retrieve the specified list
-        var foundList = await _listRepository.GetListByIdAsync(listId);
+        var foundList = await _unitOfWork.ListRepository.GetListByIdAsync(listId);
 
         // If specified list could not be found, then throw a ListNotFoundException
         if (foundList is null)
@@ -222,7 +226,7 @@ public class PackedDataService : IPackedDataService
     public async Task<ItemDto> AddItemToListAsync(int listId, ItemDto newItem)
     {
         // Start by trying to retrieve the specified list
-        var foundList = await _listRepository.GetListByIdAsync(listId);
+        var foundList = await _unitOfWork.ListRepository.GetListByIdAsync(listId);
 
         // If list could not be found, throw a ListNotFoundException
         if (foundList is null)
@@ -240,17 +244,14 @@ public class PackedDataService : IPackedDataService
             Placements = new List<Placement>()
         };
 
-        // Add the item to the list's list of items
-        foundList.Items.Add(itemToAdd);
-
         // Try to perform an update using the DB context
         try
         {
-            // Update the list since we've made changes to its list of items
-            _listRepository.Update(foundList);
+            // Add the new item
+            _unitOfWork.ItemRepository.Create(itemToAdd);
 
             // Attempt to save changes to the database
-            await _listRepository.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
         // Catch any exceptions...
         catch (Exception e)
@@ -278,10 +279,10 @@ public class PackedDataService : IPackedDataService
     /// </returns>
     /// <exception cref="ListNotFoundException">Specified list could not be found</exception>
     /// <exception cref="ItemNotFoundException">Specified item could not be found</exception>
-    public async Task<ItemDto> GetItemById(int listId, int itemId)
+    public async Task<ItemDto> GetItemByIdAsync(int listId, int itemId)
     {
         // Start by trying to retrieve the specified list
-        var foundList = await _listRepository.GetListByIdAsync(listId);
+        var foundList = await _unitOfWork.ListRepository.GetListByIdAsync(listId);
 
         // If list could not be found, throw a ListNotFoundException
         if (foundList is null)
@@ -300,6 +301,66 @@ public class PackedDataService : IPackedDataService
         }
 
         // If we found the item, then return a DTO representation of the item
+        return new ItemDto(foundItem);
+    }
+
+    /// <summary>
+    /// Update an existing item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">ID of item to update</param>
+    /// <param name="updatedItem">Updated item</param>
+    /// <returns>
+    /// A representation of the updated item
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List could not be found</exception>
+    /// <exception cref="ItemNotFoundException">Item could not be found</exception>
+    /// <exception cref="DuplicateItemException">Item with same name already exists in list</exception>
+    public async Task<ItemDto> UpdateItemAsync(int listId, int itemId, ItemDto updatedItem)
+    {
+        // Start by trying to retrieve the specified list
+        var foundList = await _unitOfWork.ListRepository.GetListByIdAsync(listId);
+
+        // If list could not be found, throw a ListNotFoundException
+        if (foundList is null)
+        {
+            throw new ListNotFoundException($"List with ID {listId} could not be found");
+        }
+
+        // Attempt to find the specified item
+        var foundItem = foundList.Items
+            .SingleOrDefault(i => i.Id == itemId);
+
+        // If specified item was not found, then throw a ItemNotFoundException
+        if (foundItem is null)
+        {
+            throw new ItemNotFoundException($"Item with ID {itemId} could not be found in list with ID {listId}");
+        }
+
+        // If we found the specified item, then update it
+        foundItem.Name = updatedItem.Name;
+        foundItem.Quantity = updatedItem.Quantity;
+
+        try
+        {
+            // Update the item via context
+            _unitOfWork.ItemRepository.Update(foundItem);
+
+            // Attempt to save changes to DB
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            // If the exception is that we have a unique violation, then we throw a DuplicateListException
+            if (e.InnerException is NpgsqlException { SqlState: PostgresErrorCodes.UniqueViolation })
+            {
+                throw new DuplicateItemException("An item with the same name already exists", e);
+            }
+
+            // Otherwise something else happen and we rethrow the exception
+            throw;
+        }
+
         return new ItemDto(foundItem);
     }
 

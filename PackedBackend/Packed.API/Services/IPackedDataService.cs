@@ -91,5 +91,19 @@ public interface IPackedDataService
     /// </returns>
     /// <exception cref="ListNotFoundException">Specified list could not be found</exception>
     /// <exception cref="ItemNotFoundException">Specified item could not be found</exception>
-    Task<ItemDto> GetItemById(int listId, int itemId);
+    Task<ItemDto> GetItemByIdAsync(int listId, int itemId);
+
+    /// <summary>
+    /// Update an existing item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">ID of item to update</param>
+    /// <param name="updatedItem">Updated item</param>
+    /// <returns>
+    /// A representation of the updated item
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List could not be found</exception>
+    /// <exception cref="ItemNotFoundException">Item could not be found</exception>
+    /// <exception cref="DuplicateItemException">Item with same name already exists in list</exception>
+    Task<ItemDto> UpdateItemAsync(int listId, int itemId, ItemDto updatedItem);
 }
