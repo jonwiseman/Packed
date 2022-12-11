@@ -1,6 +1,7 @@
 // Date Created: 2022/12/10
 // Created by: JSW
 
+using Packed.API.Exceptions;
 using Packed.Data.Core.DTOs;
 
 namespace Packed.API.Services;
@@ -27,4 +28,14 @@ public interface IPackedDataService
     /// The specified list, or null if it does not exist
     /// </returns>
     Task<ListDto?> GetListByIdAsync(int listId);
+
+    /// <summary>
+    /// Create a new list
+    /// </summary>
+    /// <param name="newList">New list</param>
+    /// <returns>
+    /// A representation of the new list
+    /// </returns>
+    /// <exception cref="DuplicateListException">A list with the given name already exists</exception>
+    Task<ListDto> CreateNewList(ListDto newList);
 }

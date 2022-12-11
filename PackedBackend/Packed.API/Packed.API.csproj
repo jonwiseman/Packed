@@ -13,10 +13,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Filters" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\Packed.Data.Core\Packed.Data.Core.csproj" />
       <ProjectReference Include="..\Packed.Data.EntityFramework\Packed.Data.EntityFramework.csproj" />
     </ItemGroup>

@@ -3,6 +3,8 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using Packed.API.Exceptions;
+using Packed.API.Filters;
 using Packed.API.Services;
 using Packed.Data.Core.DTOs;
 
@@ -11,6 +13,8 @@ namespace Packed.API.Controllers;
 /// <summary>
 /// Controller for handling all requests directly related to lists
 /// </summary>
+[TypeFilter(typeof(ModelStateInvalidFilter))]
+[TypeFilter(typeof(UnhandledExceptionFilter))]
 [Route("lists")]
 [ApiController]
 public class ListsController : ControllerBase
@@ -38,9 +42,6 @@ public class ListsController : ControllerBase
     /// <summary>
     /// Get all lists
     /// </summary>
-    /// <returns>
-    /// All lists which currently exist
-    /// </returns>
     [HttpGet]
     public async Task<ActionResult<List<ListDto>>> GetAllLists()
     {
@@ -50,13 +51,33 @@ public class ListsController : ControllerBase
     }
 
     /// <summary>
+    /// Create a new list
+    /// </summary>
+    /// <param name="newList">New list to create</param>
+    [HttpPost]
+    public async Task<ActionResult<ListDto>> CreateNewList([FromBody] ListDto newList)
+    {
+        try
+        {
+            // Try to create the new list
+            var createdList = await _packedDataService.CreateNewList(newList);
+            return CreatedAtAction(nameof(GetListById), new
+            {
+                listId = createdList.Id
+            }, createdList);
+        }
+        // If 
+        catch (DuplicateListException e)
+        {
+            return Conflict();
+        }
+    }
+
+    /// <summary>
     /// Retrieve a specific list by ID
     /// </summary>
     /// <param name="listId">ID of the list to retrieve</param>
-    /// <returns>
-    /// The specified list or a 404 if not found
-    /// </returns>
-    [HttpGet("{listId:int}")]
+    [HttpGet("{listId}")]
     public async Task<ActionResult<ListDto>> GetListById([FromRoute] [Range(1, int.MaxValue)] int listId)
     {
         var foundList = await _packedDataService.GetListByIdAsync(listId);

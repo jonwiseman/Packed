@@ -17,6 +17,14 @@ namespace Packed.Data.Core.DTOs
         #region CONSTRUCTORS
 
         /// <summary>
+        /// Parameterless constructor for use in deserialization
+        /// </summary>
+        [JsonConstructor]
+        public ListDto()
+        {
+        }
+
+        /// <summary>
         /// Create a DTO using an actual entity
         /// </summary>
         /// <param name="listEntity">List entity</param>

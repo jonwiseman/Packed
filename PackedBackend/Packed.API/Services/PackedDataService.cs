@@ -1,6 +1,8 @@
 // Date Created: 2022/12/10
 // Created by: JSW
 
+using Npgsql;
+using Packed.API.Exceptions;
 using Packed.Data.Core.DTOs;
 using Packed.Data.Core.Entities;
 using Packed.Data.Core.Repositories;
@@ -63,6 +65,48 @@ public class PackedDataService : IPackedDataService
         return foundList is null
             ? null
             : new ListDto(foundList);
+    }
+
+    /// <summary>
+    /// Create a new list
+    /// </summary>
+    /// <param name="newList">New list</param>
+    /// <returns>
+    /// A representation of the new list
+    /// </returns>
+    /// <exception cref="DuplicateListException">A list with the given name already exists</exception>
+    public async Task<ListDto> CreateNewList(ListDto newList)
+    {
+        // Initialize entity to create
+        var listToCreate = new List
+        {
+            Description = newList.Description,
+            Items = new List<Item>(),
+            Containers = new List<Container>()
+        };
+
+        try
+        {
+            // Create the entity in our context
+            _listRepository.Create(listToCreate);
+
+            // Save all changes to database context
+            await _listRepository.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            // If the exception is that we have a unique violation, then we throw a DuplicateListException
+            if (e.InnerException is NpgsqlException { SqlState: PostgresErrorCodes.UniqueViolation })
+            {
+                throw new DuplicateListException("A list with the same name already exists", e);
+            }
+
+            // Otherwise something else happen and we rethrow the exception
+            throw;
+        }
+
+        // Return the new representation of the created list
+        return new ListDto(listToCreate);
     }
 
     #endregion METHODS
