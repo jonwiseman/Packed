@@ -38,7 +38,7 @@ public interface IPackedDataService
     /// A representation of the new list
     /// </returns>
     /// <exception cref="DuplicateListException">A list with the given name already exists</exception>
-    Task<ListDto> CreateNewList(ListDto newList);
+    Task<ListDto> CreateNewListAsync(ListDto newList);
 
     /// <summary>
     /// Update an existing list
@@ -50,5 +50,12 @@ public interface IPackedDataService
     /// </returns>
     /// <exception cref="ListNotFoundException">The list could not be found</exception>
     /// <exception cref="DuplicateListException">List with given description already exists</exception>
-    Task<ListDto> UpdateList(int listId, ListDto updatedList);
+    Task<ListDto> UpdateListAsync(int listId, ListDto updatedList);
+
+    /// <summary>
+    /// Delete list with given ID
+    /// </summary>
+    /// <param name="listId">ID of list to delete</param>
+    /// <exception cref="ListNotFoundException">List could not be found</exception>
+    Task DeleteListAsync(int listId);
 }

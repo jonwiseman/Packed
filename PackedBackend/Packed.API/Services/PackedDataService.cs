@@ -78,7 +78,7 @@ public class PackedDataService : IPackedDataService
     /// A representation of the new list
     /// </returns>
     /// <exception cref="DuplicateListException">A list with the given name already exists</exception>
-    public async Task<ListDto> CreateNewList(ListDto newList)
+    public async Task<ListDto> CreateNewListAsync(ListDto newList)
     {
         // Initialize entity to create
         var listToCreate = new List
@@ -122,7 +122,7 @@ public class PackedDataService : IPackedDataService
     /// </returns>
     /// <exception cref="ListNotFoundException">The list could not be found</exception>
     /// <exception cref="DuplicateListException">List with given description already exists</exception>
-    public async Task<ListDto> UpdateList(int listId, ListDto updatedList)
+    public async Task<ListDto> UpdateListAsync(int listId, ListDto updatedList)
     {
         // Start by finding the list which needs to be updated
         var listToUpdate = await _listRepository.GetListByIdAsync(listId);
@@ -161,6 +161,27 @@ public class PackedDataService : IPackedDataService
         }
 
         return new ListDto(listToUpdate);
+    }
+
+    /// <summary>
+    /// Delete list with given ID
+    /// </summary>
+    /// <param name="listId">ID of list to delete</param>
+    /// <exception cref="ListNotFoundException">List could not be found</exception>
+    public async Task DeleteListAsync(int listId)
+    {
+        // Attempt to find the list
+        var foundList = await _listRepository.GetListByIdAsync(listId);
+
+        // If we couldn't find the list, then throw a ListNotFoundException
+        if (foundList is null)
+        {
+            throw new ListNotFoundException($"Could not find list with ID {listId}");
+        }
+
+        // If we found the list, then delete it
+        _listRepository.Delete(foundList);
+        await _listRepository.SaveChangesAsync();
     }
 
     #endregion METHODS

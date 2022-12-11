@@ -21,6 +21,16 @@ namespace Packed.API.Controllers;
 [ApiController]
 public class ListsController : ControllerBase
 {
+    #region CONSTRUCTOR
+
+    public ListsController(IPackedDataService packedDataService, ApiErrorFactoryBase apiErrorFactory)
+    {
+        _packedDataService = packedDataService ?? throw new ArgumentNullException(nameof(packedDataService));
+        _apiErrorFactory = apiErrorFactory ?? throw new ArgumentNullException(nameof(apiErrorFactory));
+    }
+
+    #endregion CONSTRUCTOR
+
     #region FIELDS
 
     /// <summary>
@@ -34,16 +44,6 @@ public class ListsController : ControllerBase
     private readonly ApiErrorFactoryBase _apiErrorFactory;
 
     #endregion FIELDS
-
-    #region CONSTRUCTOR
-
-    public ListsController(IPackedDataService packedDataService, ApiErrorFactoryBase apiErrorFactory)
-    {
-        _packedDataService = packedDataService ?? throw new ArgumentNullException(nameof(packedDataService));
-        _apiErrorFactory = apiErrorFactory ?? throw new ArgumentNullException(nameof(apiErrorFactory));
-    }
-
-    #endregion CONSTRUCTOR
 
     #region ACTION METHODS
 
@@ -68,7 +68,7 @@ public class ListsController : ControllerBase
         try
         {
             // Try to create the new list
-            var createdList = await _packedDataService.CreateNewList(newList);
+            var createdList = await _packedDataService.CreateNewListAsync(newList);
             return CreatedAtAction(nameof(GetListById), new
             {
                 listId = createdList.Id
@@ -114,7 +114,7 @@ public class ListsController : ControllerBase
         try
         {
             // Try to update the list with given ID
-            return Ok(await _packedDataService.UpdateList(listId, updatedList));
+            return Ok(await _packedDataService.UpdateListAsync(listId, updatedList));
         }
         // Case where we couldn't find the list we were supposed to update
         catch (ListNotFoundException)
@@ -128,6 +128,30 @@ public class ListsController : ControllerBase
         {
             return Conflict(_apiErrorFactory.GetApiError(HttpStatusCode.Conflict,
                 $"A list with description '{updatedList.Description}' already exists",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
+    }
+
+    /// <summary>
+    /// Delete list with given ID
+    /// </summary>
+    /// <param name="listId">ID of list to delete</param>
+    [HttpDelete("{listId}")]
+    public async Task<IActionResult> DeleteList([FromRoute] [Range(1, int.MaxValue)] int listId)
+    {
+        try
+        {
+            // Try to delete the list
+            await _packedDataService.DeleteListAsync(listId);
+
+            // If successful, then return a 204 No Content
+            return NoContent();
+        }
+        // If the list couldn't be found, then return a 404 Not Found
+        catch (ListNotFoundException)
+        {
+            return NotFound(_apiErrorFactory.GetApiError(HttpStatusCode.NotFound,
+                $"List with ID {listId} could not be found",
                 ControllerContext.HttpContext.Request.Path.ToString()));
         }
     }
