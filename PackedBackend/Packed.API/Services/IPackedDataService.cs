@@ -25,9 +25,10 @@ public interface IPackedDataService
     /// </summary>
     /// <param name="listId">ID of the list to search for</param>
     /// <returns>
-    /// The specified list, or null if it does not exist
+    /// The specified list
     /// </returns>
-    Task<ListDto?> GetListByIdAsync(int listId);
+    /// <exception cref="ListNotFoundException">The list could not be located</exception>
+    Task<ListDto> GetListByIdAsync(int listId);
 
     /// <summary>
     /// Create a new list
@@ -38,4 +39,16 @@ public interface IPackedDataService
     /// </returns>
     /// <exception cref="DuplicateListException">A list with the given name already exists</exception>
     Task<ListDto> CreateNewList(ListDto newList);
+
+    /// <summary>
+    /// Update an existing list
+    /// </summary>
+    /// <param name="listId">ID of list to update</param>
+    /// <param name="updatedList">Updated list</param>
+    /// <returns>
+    /// A representation of the updated list
+    /// </returns>
+    /// <exception cref="ListNotFoundException">The list could not be found</exception>
+    /// <exception cref="DuplicateListException">List with given description already exists</exception>
+    Task<ListDto> UpdateList(int listId, ListDto updatedList);
 }

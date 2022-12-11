@@ -51,7 +51,10 @@ public class ModelStateInvalidFilter : ActionFilterAttribute
             HttpStatusCode.BadRequest,
             "Client made an improperly formatted request",
             context.HttpContext.Request.Path)
-        );
+        )
+        {
+            StatusCode = (int)HttpStatusCode.BadRequest
+        };
     }
 
     #endregion METHODS

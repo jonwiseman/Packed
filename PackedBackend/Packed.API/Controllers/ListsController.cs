@@ -2,8 +2,10 @@
 // Created by: JSW
 
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Packed.API.Exceptions;
+using Packed.API.Factories;
 using Packed.API.Filters;
 using Packed.API.Services;
 using Packed.Data.Core.DTOs;
@@ -26,13 +28,19 @@ public class ListsController : ControllerBase
     /// </summary>
     private readonly IPackedDataService _packedDataService;
 
+    /// <summary>
+    /// Factory for creating and returning API errors
+    /// </summary>
+    private readonly ApiErrorFactoryBase _apiErrorFactory;
+
     #endregion FIELDS
 
     #region CONSTRUCTOR
 
-    public ListsController(IPackedDataService packedDataService)
+    public ListsController(IPackedDataService packedDataService, ApiErrorFactoryBase apiErrorFactory)
     {
-        _packedDataService = packedDataService;
+        _packedDataService = packedDataService ?? throw new ArgumentNullException(nameof(packedDataService));
+        _apiErrorFactory = apiErrorFactory ?? throw new ArgumentNullException(nameof(apiErrorFactory));
     }
 
     #endregion CONSTRUCTOR
@@ -66,10 +74,12 @@ public class ListsController : ControllerBase
                 listId = createdList.Id
             }, createdList);
         }
-        // If 
-        catch (DuplicateListException e)
+        // Case where we try to create a list with a description which already exists
+        catch (DuplicateListException)
         {
-            return Conflict();
+            return Conflict(_apiErrorFactory.GetApiError(HttpStatusCode.Conflict,
+                $"A list with description '{newList.Description}' already exists",
+                ControllerContext.HttpContext.Request.Path.ToString()));
         }
     }
 
@@ -80,9 +90,46 @@ public class ListsController : ControllerBase
     [HttpGet("{listId}")]
     public async Task<ActionResult<ListDto>> GetListById([FromRoute] [Range(1, int.MaxValue)] int listId)
     {
-        var foundList = await _packedDataService.GetListByIdAsync(listId);
+        try
+        {
+            return Ok(await _packedDataService.GetListByIdAsync(listId));
+        }
+        catch (ListNotFoundException)
+        {
+            return NotFound(_apiErrorFactory.GetApiError(HttpStatusCode.NotFound,
+                $"List with ID {listId} could not be found",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
+    }
 
-        return foundList is null ? NotFound() : Ok(foundList);
+    /// <summary>
+    /// Update an existing list
+    /// </summary>
+    /// <param name="listId">ID of list to update</param>
+    /// <param name="updatedList">Updated list representation</param>
+    [HttpPut("{listId}")]
+    public async Task<ActionResult<ListDto>> UpdateList([FromRoute] [Range(1, int.MaxValue)] int listId,
+        [FromBody] ListDto updatedList)
+    {
+        try
+        {
+            // Try to update the list with given ID
+            return Ok(await _packedDataService.UpdateList(listId, updatedList));
+        }
+        // Case where we couldn't find the list we were supposed to update
+        catch (ListNotFoundException)
+        {
+            return NotFound(_apiErrorFactory.GetApiError(HttpStatusCode.NotFound,
+                $"List with ID {listId} could not be found",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
+        // Case where we try to update description to a one which already exists
+        catch (DuplicateListException)
+        {
+            return Conflict(_apiErrorFactory.GetApiError(HttpStatusCode.Conflict,
+                $"A list with description '{updatedList.Description}' already exists",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
     }
 
     #endregion ACTION METHODS

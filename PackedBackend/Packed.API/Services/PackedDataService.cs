@@ -58,13 +58,16 @@ public class PackedDataService : IPackedDataService
     /// <returns>
     /// The specified list, or null if it does not exist
     /// </returns>
-    public async Task<ListDto?> GetListByIdAsync(int listId)
+    public async Task<ListDto> GetListByIdAsync(int listId)
     {
         var foundList = await _listRepository.GetListByIdAsync(listId);
 
-        return foundList is null
-            ? null
-            : new ListDto(foundList);
+        if (foundList is null)
+        {
+            throw new ListNotFoundException();
+        }
+
+        return new ListDto(foundList);
     }
 
     /// <summary>
@@ -107,6 +110,57 @@ public class PackedDataService : IPackedDataService
 
         // Return the new representation of the created list
         return new ListDto(listToCreate);
+    }
+
+    /// <summary>
+    /// Update an existing list
+    /// </summary>
+    /// <param name="listId">ID of list to update</param>
+    /// <param name="updatedList">Updated list</param>
+    /// <returns>
+    /// A representation of the updated list
+    /// </returns>
+    /// <exception cref="ListNotFoundException">The list could not be found</exception>
+    /// <exception cref="DuplicateListException">List with given description already exists</exception>
+    public async Task<ListDto> UpdateList(int listId, ListDto updatedList)
+    {
+        // Start by finding the list which needs to be updated
+        var listToUpdate = await _listRepository.GetListByIdAsync(listId);
+
+        // If the list we are trying to update could not be found, throw an exception and let caller deal with it
+        if (listToUpdate is null)
+        {
+            throw new ListNotFoundException($"List with ID {listId} could not be found");
+        }
+
+        // If there is no actual update to perform, then do nothing
+        if (string.Equals(updatedList.Description, listToUpdate.Description))
+        {
+            return new ListDto(listToUpdate);
+        }
+
+        // If we have found the list, then go ahead and set the description...
+        listToUpdate.Description = updatedList.Description;
+
+        try
+        {
+            // ...and attempt to update the list
+            _listRepository.Update(listToUpdate);
+            await _listRepository.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            // If the exception is that we have a unique violation, then we throw a DuplicateListException
+            if (e.InnerException is NpgsqlException { SqlState: PostgresErrorCodes.UniqueViolation })
+            {
+                throw new DuplicateListException("A list with the same name already exists", e);
+            }
+
+            // Otherwise something else happen and we rethrow the exception
+            throw;
+        }
+
+        return new ListDto(listToUpdate);
     }
 
     #endregion METHODS
