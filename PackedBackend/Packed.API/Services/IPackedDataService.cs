@@ -58,4 +58,14 @@ public interface IPackedDataService
     /// <param name="listId">ID of list to delete</param>
     /// <exception cref="ListNotFoundException">List could not be found</exception>
     Task DeleteListAsync(int listId);
+
+    /// <summary>
+    /// Retrieve all items belonging to the specified list
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <returns>
+    /// All items belonging to the specified list
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List with specified ID does not exist</exception>
+    Task<List<ItemDto>> GetItemsForListAsync(int listId);
 }

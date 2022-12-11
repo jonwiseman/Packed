@@ -41,6 +41,8 @@ public class UnhandledExceptionFilter : ExceptionFilterAttribute
     /// <param name="context">Context</param>
     public override void OnException(ExceptionContext context)
     {
+        // TODO: see about adding handling for common exceptions like ListNotFoundException, etc.
+
         // Send back an HTTP 500
         context.Result = new JsonResult(_apiErrorFactory.GetApiError(HttpStatusCode.InternalServerError,
             string.Empty, context.HttpContext.Request.Path))

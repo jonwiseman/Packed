@@ -17,7 +17,7 @@ public class PackedDataService : IPackedDataService
     #region FIELDS
 
     /// <summary>
-    /// Repository for interacting with
+    /// Repository for interacting with lists
     /// </summary>
     private readonly IListRepository _listRepository;
 
@@ -27,7 +27,7 @@ public class PackedDataService : IPackedDataService
 
     public PackedDataService(IListRepository listRepository)
     {
-        _listRepository = listRepository;
+        _listRepository = listRepository ?? throw new ArgumentNullException(nameof(listRepository));
     }
 
     #endregion CONSTRUCTORS
@@ -182,6 +182,31 @@ public class PackedDataService : IPackedDataService
         // If we found the list, then delete it
         _listRepository.Delete(foundList);
         await _listRepository.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Retrieve all items belonging to the specified list
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <returns>
+    /// All items belonging to the specified list
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List with specified ID does not exist</exception>
+    public async Task<List<ItemDto>> GetItemsForListAsync(int listId)
+    {
+        // Start by trying to retrieve the specified list
+        var foundList = await _listRepository.GetListByIdAsync(listId);
+
+        // If specified list could not be found, then throw a ListNotFoundException
+        if (foundList is null)
+        {
+            throw new ListNotFoundException($"List with ID {listId} not found");
+        }
+
+        // If we did find the list, then return all items formatted as DTOs
+        return foundList.Items
+            .Select(i => new ItemDto(i))
+            .ToList();
     }
 
     #endregion METHODS
