@@ -6,6 +6,7 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Packed.API.Exceptions;
 using Packed.API.Factories;
+using Packed.API.Filters;
 using Packed.API.Services;
 using Packed.Data.Core.DTOs;
 
@@ -14,6 +15,8 @@ namespace Packed.API.Controllers;
 /// <summary>
 /// Controller which handles all requests directly related to items
 /// </summary>
+[TypeFilter(typeof(ModelStateInvalidFilter))]
+[TypeFilter(typeof(UnhandledExceptionFilter))]
 [Route("lists/{listId}/items")]
 [ApiController]
 public class ItemsController : ControllerBase
@@ -34,6 +37,11 @@ public class ItemsController : ControllerBase
 
     #region CONSTRUCTOR
 
+    /// <summary>
+    /// Create a new items controller
+    /// </summary>
+    /// <param name="packedDataService">Packed data service</param>
+    /// <param name="apiErrorFactory">Error factory</param>
     public ItemsController(IPackedDataService packedDataService, ApiErrorFactoryBase apiErrorFactory)
     {
         _packedDataService = packedDataService ?? throw new ArgumentNullException(nameof(packedDataService));
@@ -62,6 +70,72 @@ public class ItemsController : ControllerBase
                 ControllerContext.HttpContext.Request.Path.ToString()));
         }
     }
+
+    /// <summary>
+    /// Create a new item inside the specified list
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="newItem">New item to create</param>
+    [HttpPost]
+    public async Task<ActionResult<ItemDto>> CreateNewItemForList([FromRoute] [Range(1, int.MaxValue)] int listId,
+        [FromBody] ItemDto newItem)
+    {
+        try
+        {
+            // Attempt to add item to list
+            var addedItem = await _packedDataService.AddItemToListAsync(listId, newItem);
+
+            // Return a 201 Created with a link to retrieve the created item
+            return CreatedAtAction(nameof(GetItemById), new
+            {
+                listId = listId,
+                itemId = addedItem.Id
+            }, addedItem);
+        }
+        // Case where specified list could not be found
+        catch (ListNotFoundException)
+        {
+            return NotFound(_apiErrorFactory.GetApiError(HttpStatusCode.NotFound,
+                $"List with ID {listId} could not be found",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
+        // Case where an item with the same name already exists in the list
+        catch (DuplicateItemException)
+        {
+            return Conflict(_apiErrorFactory.GetApiError(HttpStatusCode.Conflict,
+                $"Item with name '{newItem.Name}' already exists in list with ID {listId}",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
+    }
+
+    /// <summary>
+    /// Retrieve the specified item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    [HttpGet("{itemId}")]
+    public async Task<ActionResult<ItemDto>> GetItemById([FromRoute] [Range(1, int.MaxValue)] int listId,
+        [FromRoute] [Range(1, int.MaxValue)] int itemId)
+    {
+        try
+        {
+            return Ok(await _packedDataService.GetItemById(listId, itemId));
+        }
+        catch (ListNotFoundException)
+        {
+            return NotFound(_apiErrorFactory.GetApiError(HttpStatusCode.NotFound,
+                $"List with ID {listId} could not be found",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
+        catch (ItemNotFoundException)
+        {
+            return NotFound(_apiErrorFactory.GetApiError(HttpStatusCode.NotFound,
+                $"Item with ID {itemId} could not be found in list with ID {listId}",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
+    }
+
+    // TODO: add PUT and DELETE
 
     #endregion ACTION METHODS
 }

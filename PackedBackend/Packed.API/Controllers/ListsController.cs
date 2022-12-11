@@ -21,16 +21,6 @@ namespace Packed.API.Controllers;
 [ApiController]
 public class ListsController : ControllerBase
 {
-    #region CONSTRUCTOR
-
-    public ListsController(IPackedDataService packedDataService, ApiErrorFactoryBase apiErrorFactory)
-    {
-        _packedDataService = packedDataService ?? throw new ArgumentNullException(nameof(packedDataService));
-        _apiErrorFactory = apiErrorFactory ?? throw new ArgumentNullException(nameof(apiErrorFactory));
-    }
-
-    #endregion CONSTRUCTOR
-
     #region FIELDS
 
     /// <summary>
@@ -44,6 +34,21 @@ public class ListsController : ControllerBase
     private readonly ApiErrorFactoryBase _apiErrorFactory;
 
     #endregion FIELDS
+
+    #region CONSTRUCTOR
+
+    /// <summary>
+    /// Create a new lists controller
+    /// </summary>
+    /// <param name="packedDataService">Packed data service</param>
+    /// <param name="apiErrorFactory">Error factory</param>
+    public ListsController(IPackedDataService packedDataService, ApiErrorFactoryBase apiErrorFactory)
+    {
+        _packedDataService = packedDataService ?? throw new ArgumentNullException(nameof(packedDataService));
+        _apiErrorFactory = apiErrorFactory ?? throw new ArgumentNullException(nameof(apiErrorFactory));
+    }
+
+    #endregion CONSTRUCTOR
 
     #region ACTION METHODS
 

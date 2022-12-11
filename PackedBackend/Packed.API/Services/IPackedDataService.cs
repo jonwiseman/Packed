@@ -68,4 +68,28 @@ public interface IPackedDataService
     /// </returns>
     /// <exception cref="ListNotFoundException">List with specified ID does not exist</exception>
     Task<List<ItemDto>> GetItemsForListAsync(int listId);
+
+    /// <summary>
+    /// Add a new item to a list
+    /// </summary>
+    /// <param name="listId">ID of list to add item to</param>
+    /// <param name="newItem">Item to add</param>
+    /// <returns>
+    /// A representation of the created item
+    /// </returns>
+    /// <exception cref="ListNotFoundException">Specified list could not be found</exception>
+    /// <exception cref="DuplicateItemException">Item with same name already exists in list</exception>
+    Task<ItemDto> AddItemToListAsync(int listId, ItemDto newItem);
+
+    /// <summary>
+    /// Get the specified item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item I</param>
+    /// <returns>
+    /// The specified item
+    /// </returns>
+    /// <exception cref="ListNotFoundException">Specified list could not be found</exception>
+    /// <exception cref="ItemNotFoundException">Specified item could not be found</exception>
+    Task<ItemDto> GetItemById(int listId, int itemId);
 }

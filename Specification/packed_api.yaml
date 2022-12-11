@@ -494,6 +494,7 @@ components:
     Item:
       required:
         - name
+        - quantity
       properties:
         itemId:
           type: integer

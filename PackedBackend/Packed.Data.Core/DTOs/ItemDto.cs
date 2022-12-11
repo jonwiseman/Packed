@@ -34,8 +34,8 @@ namespace Packed.Data.Core.DTOs
             Name = itemEntity.Name;
             Quantity = itemEntity.Quantity;
             Placements = itemEntity.Placements
-                .Select(p => new PlacementDto(p))
-                .ToList();
+                ?.Select(p => new PlacementDto(p))
+                .ToList() ?? new List<PlacementDto>();
         }
 
         #endregion CONSTRUCTORS
