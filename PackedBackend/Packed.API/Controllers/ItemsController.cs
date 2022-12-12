@@ -26,7 +26,7 @@ public class ItemsController : ControllerBase
     /// <summary>
     /// Data service for interacting with Packed data
     /// </summary>
-    private readonly IPackedDataService _packedDataService;
+    private readonly IPackedItemsDataService _packedItemsDataService;
 
     /// <summary>
     /// Factory for creating API error objects
@@ -40,11 +40,12 @@ public class ItemsController : ControllerBase
     /// <summary>
     /// Create a new items controller
     /// </summary>
-    /// <param name="packedDataService">Packed data service</param>
+    /// <param name="packedItemsDataService">Packed data service</param>
     /// <param name="apiErrorFactory">Error factory</param>
-    public ItemsController(IPackedDataService packedDataService, ApiErrorFactoryBase apiErrorFactory)
+    public ItemsController(IPackedItemsDataService packedItemsDataService, ApiErrorFactoryBase apiErrorFactory)
     {
-        _packedDataService = packedDataService ?? throw new ArgumentNullException(nameof(packedDataService));
+        _packedItemsDataService =
+            packedItemsDataService ?? throw new ArgumentNullException(nameof(packedItemsDataService));
         _apiErrorFactory = apiErrorFactory ?? throw new ArgumentNullException(nameof(apiErrorFactory));
     }
 
@@ -61,7 +62,7 @@ public class ItemsController : ControllerBase
     {
         try
         {
-            return Ok(await _packedDataService.GetItemsForListAsync(listId));
+            return Ok(await _packedItemsDataService.GetItemsForListAsync(listId));
         }
         catch (ListNotFoundException)
         {
@@ -83,7 +84,7 @@ public class ItemsController : ControllerBase
         try
         {
             // Attempt to add item to list
-            var addedItem = await _packedDataService.AddItemToListAsync(listId, newItem);
+            var addedItem = await _packedItemsDataService.AddItemToListAsync(listId, newItem);
 
             // Return a 201 Created with a link to retrieve the created item
             return CreatedAtAction(nameof(GetItemById), new
@@ -119,7 +120,7 @@ public class ItemsController : ControllerBase
     {
         try
         {
-            return Ok(await _packedDataService.GetItemByIdAsync(listId, itemId));
+            return Ok(await _packedItemsDataService.GetItemByIdAsync(listId, itemId));
         }
         // Case where list not found
         catch (ListNotFoundException)
@@ -149,7 +150,7 @@ public class ItemsController : ControllerBase
     {
         try
         {
-            return Ok(await _packedDataService.UpdateItemAsync(listId, itemId, updatedItem));
+            return Ok(await _packedItemsDataService.UpdateItemAsync(listId, itemId, updatedItem));
         }
         // Case where specified list could not be found
         catch (ListNotFoundException)
@@ -192,7 +193,7 @@ public class ItemsController : ControllerBase
     {
         try
         {
-            await _packedDataService.DeleteItemAsync(listId, itemId);
+            await _packedItemsDataService.DeleteItemAsync(listId, itemId);
             return NoContent();
         }
         // Case where specified list could not be found

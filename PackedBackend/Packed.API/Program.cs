@@ -24,8 +24,9 @@ builder.Services.AddDbContext<PackedDbContext>(options =>
 // Add unit of work
 builder.Services.AddScoped<IPackedUnitOfWork, PackedUnitOfWork>();
 
-// Add data service
-builder.Services.AddScoped<IPackedDataService, PackedDataService>();
+// Add data services
+builder.Services.AddScoped<IPackedListsDataService, PackedListsDataService>();
+builder.Services.AddScoped<IPackedItemsDataService, PackedItemsDataService>();
 
 // Add API error factory
 builder.Services.AddSingleton<ApiErrorFactoryBase, ApiErrorFactory>();

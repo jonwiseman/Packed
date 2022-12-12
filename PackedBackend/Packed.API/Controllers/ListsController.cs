@@ -26,7 +26,7 @@ public class ListsController : ControllerBase
     /// <summary>
     /// Service for interacting with data access layer
     /// </summary>
-    private readonly IPackedDataService _packedDataService;
+    private readonly IPackedListsDataService _packedListsDataService;
 
     /// <summary>
     /// Factory for creating and returning API errors
@@ -40,11 +40,12 @@ public class ListsController : ControllerBase
     /// <summary>
     /// Create a new lists controller
     /// </summary>
-    /// <param name="packedDataService">Packed data service</param>
+    /// <param name="packedListsDataService">Packed data service</param>
     /// <param name="apiErrorFactory">Error factory</param>
-    public ListsController(IPackedDataService packedDataService, ApiErrorFactoryBase apiErrorFactory)
+    public ListsController(IPackedListsDataService packedListsDataService, ApiErrorFactoryBase apiErrorFactory)
     {
-        _packedDataService = packedDataService ?? throw new ArgumentNullException(nameof(packedDataService));
+        _packedListsDataService =
+            packedListsDataService ?? throw new ArgumentNullException(nameof(packedListsDataService));
         _apiErrorFactory = apiErrorFactory ?? throw new ArgumentNullException(nameof(apiErrorFactory));
     }
 
@@ -58,7 +59,7 @@ public class ListsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<ListDto>>> GetAllLists()
     {
-        var lists = await _packedDataService.GetAllListsAsync();
+        var lists = await _packedListsDataService.GetAllListsAsync();
 
         return Ok(lists);
     }
@@ -73,7 +74,7 @@ public class ListsController : ControllerBase
         try
         {
             // Try to create the new list
-            var createdList = await _packedDataService.CreateNewListAsync(newList);
+            var createdList = await _packedListsDataService.CreateNewListAsync(newList);
             return CreatedAtAction(nameof(GetListById), new
             {
                 listId = createdList.Id
@@ -97,7 +98,7 @@ public class ListsController : ControllerBase
     {
         try
         {
-            return Ok(await _packedDataService.GetListByIdAsync(listId));
+            return Ok(await _packedListsDataService.GetListByIdAsync(listId));
         }
         catch (ListNotFoundException)
         {
@@ -119,7 +120,7 @@ public class ListsController : ControllerBase
         try
         {
             // Try to update the list with given ID
-            return Ok(await _packedDataService.UpdateListAsync(listId, updatedList));
+            return Ok(await _packedListsDataService.UpdateListAsync(listId, updatedList));
         }
         // Case where we couldn't find the list we were supposed to update
         catch (ListNotFoundException)
@@ -147,7 +148,7 @@ public class ListsController : ControllerBase
         try
         {
             // Try to delete the list
-            await _packedDataService.DeleteListAsync(listId);
+            await _packedListsDataService.DeleteListAsync(listId);
 
             // If successful, then return a 204 No Content
             return NoContent();
