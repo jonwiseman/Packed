@@ -12,6 +12,9 @@ namespace Packed.API.Services;
 /// <summary>
 /// Standard implementation of the <see cref="IPackedDataService"/> interface
 /// </summary>
+/// <remarks>
+/// TODO: split into multiple classes and share base checks (missing lists, missing items, etc.)
+/// </remarks>
 public class PackedDataService : IPackedDataService
 {
     #region FIELDS
@@ -316,6 +319,7 @@ public class PackedDataService : IPackedDataService
     /// <exception cref="ListNotFoundException">List could not be found</exception>
     /// <exception cref="ItemNotFoundException">Item could not be found</exception>
     /// <exception cref="DuplicateItemException">Item with same name already exists in list</exception>
+    /// <exception cref="ItemQuantityException">Reducing number of items to below number of placements</exception>
     public async Task<ItemDto> UpdateItemAsync(int listId, int itemId, ItemDto updatedItem)
     {
         // Start by trying to retrieve the specified list
@@ -335,6 +339,13 @@ public class PackedDataService : IPackedDataService
         if (foundItem is null)
         {
             throw new ItemNotFoundException($"Item with ID {itemId} could not be found in list with ID {listId}");
+        }
+
+        // If we're reducing quantity such that we have more placements than items, throw an exception
+        if (updatedItem.Quantity < foundItem.Placements.Count)
+        {
+            throw new ItemQuantityException(
+                $"Currently have {foundItem.Placements.Count} placements, cannot reduce to {updatedItem.Quantity}");
         }
 
         // If we found the specified item, then update it
@@ -362,6 +373,39 @@ public class PackedDataService : IPackedDataService
         }
 
         return new ItemDto(foundItem);
+    }
+
+    /// <summary>
+    /// Delete an item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <exception cref="ListNotFoundException">List not found</exception>
+    /// <exception cref="ItemNotFoundException">Item not found</exception>
+    public async Task DeleteItemAsync(int listId, int itemId)
+    {
+        // Start by trying to retrieve the specified list
+        var foundList = await _unitOfWork.ListRepository.GetListByIdAsync(listId);
+
+        // If list could not be found, throw a ListNotFoundException
+        if (foundList is null)
+        {
+            throw new ListNotFoundException($"List with ID {listId} could not be found");
+        }
+
+        // Attempt to find the specified item
+        var foundItem = foundList.Items
+            .SingleOrDefault(i => i.Id == itemId);
+
+        // If specified item was not found, then throw a ItemNotFoundException
+        if (foundItem is null)
+        {
+            throw new ItemNotFoundException($"Item with ID {itemId} could not be found in list with ID {listId}");
+        }
+
+        // Delete the item
+        _unitOfWork.ItemRepository.Delete(foundItem);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     #endregion METHODS

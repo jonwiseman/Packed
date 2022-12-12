@@ -1,19 +1,21 @@
-// Date Created: 2022/12/10
+// Date Created: 2022/12/11
 // Created by: JSW
 
 namespace Packed.API.Exceptions;
 
 /// <summary>
-/// Exception which is raised when a list can't be found
+/// Exception to be thrown when an update to the quantity of an item
+/// would cause an inconsistency with the current number of placements.
+/// Basically, don't want to be able to have more placements than items
 /// </summary>
-public class ListNotFoundException : PackedApiException
+public class ItemQuantityException : PackedApiException
 {
     #region CONSTRUCTORS
 
     /// <summary>
     /// Create a new exception
     /// </summary>
-    public ListNotFoundException()
+    public ItemQuantityException()
     {
     }
 
@@ -21,7 +23,7 @@ public class ListNotFoundException : PackedApiException
     /// Create a new exception with given message
     /// </summary>
     /// <param name="message">Exception message</param>
-    public ListNotFoundException(string message)
+    public ItemQuantityException(string message)
         : base(message)
     {
     }
@@ -31,7 +33,7 @@ public class ListNotFoundException : PackedApiException
     /// </summary>
     /// <param name="message">Message</param>
     /// <param name="innerException">Inner exception</param>
-    public ListNotFoundException(string message, Exception innerException)
+    public ItemQuantityException(string message, Exception innerException)
         : base(message, innerException)
     {
     }

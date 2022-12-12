@@ -172,6 +172,43 @@ public class ItemsController : ControllerBase
                 $"Item with name '{updatedItem.Name}' already exists in list with ID {listId}",
                 ControllerContext.HttpContext.Request.Path.ToString()));
         }
+        // Case where there would be more items than placements
+        catch (ItemQuantityException)
+        {
+            return Conflict(_apiErrorFactory.GetApiError(HttpStatusCode.Conflict,
+                $"Cannot change to {updatedItem.Quantity} due to existing placements",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
+    }
+
+    /// <summary>
+    /// Delete an item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    [HttpDelete("{itemId}")]
+    public async Task<IActionResult> DeleteItem([FromRoute] [Range(1, int.MaxValue)] int listId,
+        [FromRoute] [Range(1, int.MaxValue)] int itemId)
+    {
+        try
+        {
+            await _packedDataService.DeleteItemAsync(listId, itemId);
+            return NoContent();
+        }
+        // Case where specified list could not be found
+        catch (ListNotFoundException)
+        {
+            return NotFound(_apiErrorFactory.GetApiError(HttpStatusCode.NotFound,
+                $"List with ID {listId} could not be found",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
+        // Case where item not found
+        catch (ItemNotFoundException)
+        {
+            return NotFound(_apiErrorFactory.GetApiError(HttpStatusCode.NotFound,
+                $"Item with ID {itemId} could not be found in list with ID {listId}",
+                ControllerContext.HttpContext.Request.Path.ToString()));
+        }
     }
 
     #endregion ACTION METHODS

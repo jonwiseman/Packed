@@ -105,5 +105,15 @@ public interface IPackedDataService
     /// <exception cref="ListNotFoundException">List could not be found</exception>
     /// <exception cref="ItemNotFoundException">Item could not be found</exception>
     /// <exception cref="DuplicateItemException">Item with same name already exists in list</exception>
+    /// <exception cref="ItemQuantityException">Reducing number of items to below number of placements</exception>
     Task<ItemDto> UpdateItemAsync(int listId, int itemId, ItemDto updatedItem);
+
+    /// <summary>
+    /// Delete an item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <exception cref="ListNotFoundException">List not found</exception>
+    /// <exception cref="ItemNotFoundException">Item not found</exception>
+    Task DeleteItemAsync(int listId, int itemId);
 }
