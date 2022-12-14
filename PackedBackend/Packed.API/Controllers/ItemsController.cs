@@ -4,11 +4,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
-using Packed.API.Exceptions;
+using Packed.API.Core.DTOs;
+using Packed.API.Core.Exceptions;
+using Packed.API.Core.Services;
 using Packed.API.Factories;
 using Packed.API.Filters;
-using Packed.API.Services;
-using Packed.Data.Core.DTOs;
 
 namespace Packed.API.Controllers;
 

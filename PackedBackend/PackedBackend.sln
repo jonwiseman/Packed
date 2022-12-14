@@ -6,6 +6,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Packed.Data.EntityFramework
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Packed.API", "Packed.API\Packed.API.csproj", "{4DE29862-E2E8-4FCA-BD33-E6202555C0DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Packed.API.Core", "Packed.API.Core\Packed.API.Core.csproj", "{071B2962-E709-4BDE-9E9A-6E6E0562DD5B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "API", "API", "{B8907C12-5083-487E-BFCD-0DC3C736E800}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{4DE29862-E2E8-4FCA-BD33-E6202555C0DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DE29862-E2E8-4FCA-BD33-E6202555C0DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DE29862-E2E8-4FCA-BD33-E6202555C0DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{071B2962-E709-4BDE-9E9A-6E6E0562DD5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{071B2962-E709-4BDE-9E9A-6E6E0562DD5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{071B2962-E709-4BDE-9E9A-6E6E0562DD5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{071B2962-E709-4BDE-9E9A-6E6E0562DD5B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4DE29862-E2E8-4FCA-BD33-E6202555C0DE} = {B8907C12-5083-487E-BFCD-0DC3C736E800}
+		{071B2962-E709-4BDE-9E9A-6E6E0562DD5B} = {B8907C12-5083-487E-BFCD-0DC3C736E800}
 	EndGlobalSection
 EndGlobal

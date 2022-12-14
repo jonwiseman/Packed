@@ -13,6 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Packed.API.Core\Packed.API.Core.csproj" />
       <ProjectReference Include="..\Packed.Data.Core\Packed.Data.Core.csproj" />
       <ProjectReference Include="..\Packed.Data.EntityFramework\Packed.Data.EntityFramework.csproj" />
     </ItemGroup>

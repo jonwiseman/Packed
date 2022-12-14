@@ -1,4 +1,4 @@
-// Date Created: 2022/12/10
+// Date Created: 2022/12/13
 // Created by: JSW
 
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using Packed.Data.Core.Entities;
 
-namespace Packed.Data.Core.DTOs
+namespace Packed.API.Core.DTOs
 {
     /// <summary>
     /// DTO representation of a <see cref="List"/> entity

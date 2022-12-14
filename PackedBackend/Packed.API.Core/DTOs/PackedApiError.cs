@@ -1,10 +1,10 @@
-// Date Created: 2022/12/10
+// Date Created: 2022/12/13
 // Created by: JSW
 
 using System;
 using System.Text.Json.Serialization;
 
-namespace Packed.Data.Core.DTOs
+namespace Packed.API.Core.DTOs
 {
     /// <summary>
     /// Standard DTO for all API errors

@@ -2,7 +2,7 @@
 // Created by: JSW
 
 using System.Net;
-using Packed.Data.Core.DTOs;
+using Packed.API.Core.DTOs;
 
 namespace Packed.API.Factories;
 
