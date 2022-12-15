@@ -62,7 +62,6 @@ namespace Packed.API.Core.Services
         /// <param name="placementId">Placement ID</param>
         /// <exception cref="ListNotFoundException">List not found</exception>
         /// <exception cref="ItemNotFoundException">Item not found</exception>
-        /// <exception cref="ContainerNotFoundException">Container not found</exception>
         /// <exception cref="PlacementNotFoundException">Placement not found</exception>
         Task DeletePlacementAsync(int listId, int itemId, int placementId);
     }

@@ -16,17 +16,8 @@ namespace Packed.API.Core.Services
     /// <summary>
     /// Data service for operating on items
     /// </summary>
-    public class PackedItemsDataService : IPackedItemsDataService
+    public class PackedItemsDataService : PackedDataServiceBase, IPackedItemsDataService
     {
-        #region FIELDS
-
-        /// <summary>
-        /// Unit of work for accessing Packed data repositories
-        /// </summary>
-        private readonly IPackedUnitOfWork _packedUnitOfWork;
-
-        #endregion FIELDS
-
         #region CONSTRUCTOR
 
         /// <summary>
@@ -34,8 +25,8 @@ namespace Packed.API.Core.Services
         /// </summary>
         /// <param name="packedUnitOfWork">Unit of work</param>
         public PackedItemsDataService(IPackedUnitOfWork packedUnitOfWork)
+            : base(packedUnitOfWork)
         {
-            _packedUnitOfWork = packedUnitOfWork ?? throw new ArgumentNullException(nameof(packedUnitOfWork));
         }
 
         #endregion CONSTRUCTOR
@@ -90,10 +81,10 @@ namespace Packed.API.Core.Services
             try
             {
                 // Add the new item
-                _packedUnitOfWork.ItemRepository.Create(itemToAdd);
+                PackedUnitOfWork.ItemRepository.Create(itemToAdd);
 
                 // Attempt to save changes to the database
-                await _packedUnitOfWork.SaveChangesAsync();
+                await PackedUnitOfWork.SaveChangesAsync();
             }
             // Catch any exceptions...
             catch (Exception e)
@@ -168,10 +159,10 @@ namespace Packed.API.Core.Services
             try
             {
                 // Update the item via context
-                _packedUnitOfWork.ItemRepository.Update(foundItem);
+                PackedUnitOfWork.ItemRepository.Update(foundItem);
 
                 // Attempt to save changes to DB
-                await _packedUnitOfWork.SaveChangesAsync();
+                await PackedUnitOfWork.SaveChangesAsync();
             }
             catch (Exception e)
             {
@@ -204,61 +195,10 @@ namespace Packed.API.Core.Services
             var foundItem = GetItem(foundList, itemId);
 
             // Delete the item
-            _packedUnitOfWork.ItemRepository.Delete(foundItem);
-            await _packedUnitOfWork.SaveChangesAsync();
+            PackedUnitOfWork.ItemRepository.Delete(foundItem);
+            await PackedUnitOfWork.SaveChangesAsync();
         }
 
         #endregion METHODS
-
-        #region HELPER METHODS
-
-        /// <summary>
-        /// Verify that a specified list exists and return it
-        /// </summary>
-        /// <param name="listId">List ID</param>
-        /// <returns>
-        /// The specified list
-        /// </returns>
-        /// <exception cref="ListNotFoundException">List could not be found</exception>
-        private async Task<List> GetList(int listId)
-        {
-            // Start by trying to retrieve the specified list
-            var foundList = await _packedUnitOfWork.ListRepository.GetListByIdAsync(listId);
-
-            // If list could not be found, throw a ListNotFoundException
-            if (foundList is null)
-            {
-                throw new ListNotFoundException($"List with ID {listId} could not be found");
-            }
-
-            return foundList;
-        }
-
-        /// <summary>
-        /// Given a list, retrieve a specific item and throw an exception if it is not found
-        /// </summary>
-        /// <param name="foundList">List</param>
-        /// <param name="itemId">Item ID</param>
-        /// <returns>
-        /// The specified item
-        /// </returns>
-        /// <exception cref="ItemNotFoundException">The item could not be found in the list</exception>
-        private Item GetItem(List foundList, int itemId)
-        {
-            // Attempt to find the specified item in the given list
-            var foundItem = foundList.Items
-                .SingleOrDefault(i => i.Id == itemId);
-
-            // If specified item was not found, then throw a ItemNotFoundException
-            if (foundItem is null)
-            {
-                throw new ItemNotFoundException(
-                    $"Item with ID {itemId} could not be found in list with ID {foundList.Id}");
-            }
-
-            return foundItem;
-        }
-
-        #endregion HELPER METHODS
     }
 }
