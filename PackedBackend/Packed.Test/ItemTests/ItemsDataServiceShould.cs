@@ -2,6 +2,7 @@
 // Created by: JSW
 
 using Moq;
+using Packed.API.Core.DTOs;
 using Packed.API.Core.Exceptions;
 using Packed.API.Core.Services;
 using Packed.Data.Core.Entities;
@@ -78,7 +79,7 @@ public class ItemsDataServiceShould : PackedTestBase
     /// does not exist throws a <see cref="ListNotFoundException"/>
     /// </summary>
     [TestMethod]
-    public async Task RaiseListNotFoundExceptionWhenListDoesNotExist()
+    public async Task RaiseListNotFoundExceptionOnGetAllWhenListDoesNotExist()
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
@@ -90,6 +91,81 @@ public class ItemsDataServiceShould : PackedTestBase
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
             await dataService.GetItemsForListAsync(listId));
     }
+
+    /// <summary>
+    /// Test to ensure that we can add new items to existing lists
+    /// </summary>
+    /// <param name="list">List test data</param>
+    [DataTestMethod]
+    [DynamicData(nameof(ItemsDataServiceTestData.ListData), dynamicDataDeclaringType: typeof(ItemsDataServiceTestData))]
+    public async Task AddNewItemsToLists(List list)
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+
+        // Create a new item with random quantity
+        var newItem = new ItemDto
+        {
+            Name = "New item",
+            Quantity = new Random().Next(1, int.MaxValue)
+        };
+
+        // Act
+        var addedItem = await dataService.AddItemToListAsync(list.Id, newItem);
+
+        // Assert
+        Assert.IsNotNull(addedItem);
+        Assert.AreEqual(addedItem.Name, newItem.Name);
+        Assert.AreEqual(addedItem.Quantity, newItem.Quantity);
+    }
+
+    /// <summary>
+    /// Test to ensure that trying to add items to a list which does not exist
+    /// will cause a <see cref="ListNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundExceptionOnAddWhenListDoesNotExist()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+
+        // Get a random integer ID which does not exist
+        var listId = new Random().Next(int.MinValue, 0);
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.AddItemToListAsync(listId, new ItemDto()));
+    }
+
+    /// <summary>
+    /// Test to ensure that trying to add an item to a list which already
+    /// has an item with the same name causes a <see cref="DuplicateItemException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseDuplicateItemExceptionOnAddWhenItemAlreadyExists()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+
+        // Get the name of an item which already exists
+        var itemName = ItemsDataServiceTestData.ListWithTwoItems
+            .Items
+            .First()
+            .Name!;
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<DuplicateItemException>(async () =>
+            await dataService.AddItemToListAsync(
+                ItemsDataServiceTestData.ListWithTwoItems.Id,
+                new ItemDto
+                {
+                    Name = itemName
+                }));
+    }
+    
+    // TODO: add tests for getting specific items
+    // TODO: add tests for updating items
+    // TODO: add tests for deleting items
 
     #endregion TEST METHODS
 }

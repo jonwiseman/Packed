@@ -65,7 +65,14 @@ namespace Packed.API.Core.Services
         public async Task<ItemDto> AddItemToListAsync(int listId, ItemDto newItem)
         {
             // Make sure the list actually exists. This method will throw an exception if it does not
-            await GetList(listId);
+            var foundList = await GetList(listId);
+
+            // If an item with this name already exists in this list, then we won't even try to
+            // add it via our data store. Instead, throw an exception right away
+            if (foundList.Items.Any(i => string.Equals(i.Name, newItem.Name)))
+            {
+                throw new DuplicateItemException("An item with the same name already exists");
+            }
 
             // If list was found, then attempt to add the item
             // Start by creating a representation of the item
