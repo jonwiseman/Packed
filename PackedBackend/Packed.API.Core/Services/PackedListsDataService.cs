@@ -16,17 +16,8 @@ namespace Packed.API.Core.Services
     /// <summary>
     /// Standard implementation of the <see cref="IPackedListsDataService"/> interface
     /// </summary>
-    public class PackedListsDataService : IPackedListsDataService
+    public class PackedListsDataService : PackedDataServiceBase, IPackedListsDataService
     {
-        #region FIELDS
-
-        /// <summary>
-        /// Unit of work for interacting with Packed backend
-        /// </summary>
-        private readonly IPackedUnitOfWork _packedUnitOfWork;
-
-        #endregion FIELDS
-
         #region CONSTRUCTOR
 
         /// <summary>
@@ -34,8 +25,8 @@ namespace Packed.API.Core.Services
         /// </summary>
         /// <param name="packedUnitOfWork">Packed unit of work</param>
         public PackedListsDataService(IPackedUnitOfWork packedUnitOfWork)
+            : base(packedUnitOfWork)
         {
-            _packedUnitOfWork = packedUnitOfWork ?? throw new ArgumentNullException(nameof(packedUnitOfWork));
         }
 
         #endregion CONSTRUCTOR
@@ -51,7 +42,7 @@ namespace Packed.API.Core.Services
         public async Task<IEnumerable<ListDto>> GetAllListsAsync()
         {
             // Find all lists which exist in the database
-            var foundLists = (await _packedUnitOfWork.ListRepository.GetAllListsAsync())
+            var foundLists = (await PackedUnitOfWork.ListRepository.GetAllListsAsync())
                              ?? new List<List>();
 
             // Convert these list entities into DTO representations
@@ -93,10 +84,10 @@ namespace Packed.API.Core.Services
             try
             {
                 // Create the entity in our context
-                _packedUnitOfWork.ListRepository.Create(listToCreate);
+                PackedUnitOfWork.ListRepository.Create(listToCreate);
 
                 // Save all changes to database context
-                await _packedUnitOfWork.SaveChangesAsync();
+                await PackedUnitOfWork.SaveChangesAsync();
             }
             catch (Exception e)
             {
@@ -141,8 +132,8 @@ namespace Packed.API.Core.Services
             try
             {
                 // ...and attempt to update the list
-                _packedUnitOfWork.ListRepository.Update(foundList);
-                await _packedUnitOfWork.SaveChangesAsync();
+                PackedUnitOfWork.ListRepository.Update(foundList);
+                await PackedUnitOfWork.SaveChangesAsync();
             }
             catch (Exception e)
             {
@@ -167,36 +158,10 @@ namespace Packed.API.Core.Services
         public async Task DeleteListAsync(int listId)
         {
             // If we found the list, then delete it
-            _packedUnitOfWork.ListRepository.Delete(await GetList(listId));
-            await _packedUnitOfWork.SaveChangesAsync();
+            PackedUnitOfWork.ListRepository.Delete(await GetList(listId));
+            await PackedUnitOfWork.SaveChangesAsync();
         }
 
         #endregion METHODS
-
-        #region HELPER METHODS
-
-        /// <summary>
-        /// Retrieve the specified list and throw an exception if it does not exist
-        /// </summary>
-        /// <param name="listId">List ID</param>
-        /// <returns>
-        /// The specified list
-        /// </returns>
-        /// <exception cref="ListNotFoundException">The list could not be found</exception>
-        private async Task<List> GetList(int listId)
-        {
-            // Attempt to find the list
-            var foundList = await _packedUnitOfWork.ListRepository.GetListByIdAsync(listId);
-
-            // If we couldn't find the list, then throw a ListNotFoundException
-            if (foundList is null)
-            {
-                throw new ListNotFoundException($"Could not find list with ID {listId}");
-            }
-
-            return foundList;
-        }
-
-        #endregion HELPER METHODS
     }
 }

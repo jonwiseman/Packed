@@ -16,17 +16,8 @@ namespace Packed.API.Core.Services
     /// <summary>
     /// Data service for manipulating containers
     /// </summary>
-    public class PackedContainersDataService : IPackedContainersDataService
+    public class PackedContainersDataService : PackedDataServiceBase, IPackedContainersDataService
     {
-        #region FIELDS
-
-        /// <summary>
-        /// Unit of work for interacting with Packed data store
-        /// </summary>
-        private readonly IPackedUnitOfWork _packedUnitOfWork;
-
-        #endregion FIELDS
-
         #region CONSTRUCTOR
 
         /// <summary>
@@ -34,8 +25,8 @@ namespace Packed.API.Core.Services
         /// </summary>
         /// <param name="packedUnitOfWork">Unit of work for interacting with Packed data store</param>
         public PackedContainersDataService(IPackedUnitOfWork packedUnitOfWork)
+            : base(packedUnitOfWork)
         {
-            _packedUnitOfWork = packedUnitOfWork;
         }
 
         #endregion CONSTRUCTOR
@@ -88,10 +79,10 @@ namespace Packed.API.Core.Services
             try
             {
                 // Then we'll add it to the list of items tracked by the context
-                _packedUnitOfWork.ContainerRepository.Create(containerToAdd);
+                PackedUnitOfWork.ContainerRepository.Create(containerToAdd);
 
                 // Finally, we'll attempt to persist the container
-                await _packedUnitOfWork.SaveChangesAsync();
+                await PackedUnitOfWork.SaveChangesAsync();
             }
             catch (Exception e)
             {
@@ -163,10 +154,10 @@ namespace Packed.API.Core.Services
             try
             {
                 // Update the entity
-                _packedUnitOfWork.ContainerRepository.Update(foundContainer);
+                PackedUnitOfWork.ContainerRepository.Update(foundContainer);
 
                 // Save changes to data store
-                await _packedUnitOfWork.SaveChangesAsync();
+                await PackedUnitOfWork.SaveChangesAsync();
             }
             catch (Exception e)
             {
@@ -199,61 +190,10 @@ namespace Packed.API.Core.Services
             var foundContainer = GetContainer(foundList, containerId);
 
             // Finally, delete the container
-            _packedUnitOfWork.ContainerRepository.Delete(foundContainer);
-            await _packedUnitOfWork.SaveChangesAsync();
+            PackedUnitOfWork.ContainerRepository.Delete(foundContainer);
+            await PackedUnitOfWork.SaveChangesAsync();
         }
 
         #endregion METHODS
-
-        #region HELPER METHODS
-
-        /// <summary>
-        /// Retrieve the specified list and throw an exception if it does not exist
-        /// </summary>
-        /// <param name="listId">List ID</param>
-        /// <returns>
-        /// The specified list
-        /// </returns>
-        /// <exception cref="ListNotFoundException">The list could not be found</exception>
-        private async Task<List> GetList(int listId)
-        {
-            // Attempt to find the list
-            var foundList = await _packedUnitOfWork.ListRepository.GetListByIdAsync(listId);
-
-            // If we couldn't find the list, then throw a ListNotFoundException
-            if (foundList is null)
-            {
-                throw new ListNotFoundException($"Could not find list with ID {listId}");
-            }
-
-            return foundList;
-        }
-
-        /// <summary>
-        /// Retrieve a specific container from a list and ensure it exists
-        /// </summary>
-        /// <param name="foundList">The loaded list</param>
-        /// <param name="containerId">The specific container ID</param>
-        /// <returns>
-        /// The specified container
-        /// </returns>
-        /// <exception cref="ContainerNotFoundException">The container could not be found</exception>
-        private Container GetContainer(List foundList, int containerId)
-        {
-            // Try to find the container in the list's collection of containers
-            var foundContainer = foundList.Containers
-                .SingleOrDefault(c => c.Id == containerId);
-
-            // If the container was not found, then throw an exception
-            if (foundContainer is null)
-            {
-                throw new ContainerNotFoundException(
-                    $"Container with ID {containerId} could not be found in list with ID {foundList.Id}");
-            }
-
-            return foundContainer;
-        }
-
-        #endregion HELPER METHODS
     }
 }
