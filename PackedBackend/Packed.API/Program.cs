@@ -28,6 +28,7 @@ builder.Services.AddScoped<IPackedUnitOfWork, PackedUnitOfWork>();
 builder.Services.AddScoped<IPackedListsDataService, PackedListsDataService>();
 builder.Services.AddScoped<IPackedItemsDataService, PackedItemsDataService>();
 builder.Services.AddScoped<IPackedContainersDataService, PackedContainersDataService>();
+builder.Services.AddScoped<IPackedPlacementsDataService, PackedPlacementsDataService>();
 
 // Add API error factory
 builder.Services.AddSingleton<ApiErrorFactoryBase, ApiErrorFactory>();
