@@ -1,4 +1,4 @@
-// Date Created: 2022/12/15
+// Date Created: 2022/12/16
 // Created by: JSW
 
 using Moq;
@@ -27,8 +27,8 @@ public class ListsDataServiceShould : PackedTestBase
         // All other IDs will return null
         ListRepositoryMock
             .Setup(r =>
-                r.GetListByIdAsync(ListDataServiceTestData.ListWhichExists.Id))
-            .ReturnsAsync(ListDataServiceTestData.ListWhichExists);
+                r.GetListByIdAsync(ListsDataServiceTestData.ListWhichExists.Id))
+            .ReturnsAsync(ListsDataServiceTestData.ListWhichExists);
     }
 
     #endregion TEST LIFE CYCLE
@@ -64,12 +64,12 @@ public class ListsDataServiceShould : PackedTestBase
         var dataService = new PackedListsDataService(UnitOfWorkMock.Object);
 
         // Act
-        var foundList = await dataService.GetListByIdAsync(ListDataServiceTestData.ListWhichExists.Id);
+        var foundList = await dataService.GetListByIdAsync(ListsDataServiceTestData.ListWhichExists.Id);
 
         // Assert
         Assert.IsNotNull(foundList);
-        Assert.AreEqual(ListDataServiceTestData.ListWhichExists.Id, foundList.Id);
-        Assert.AreEqual(ListDataServiceTestData.ListWhichExists.Description, foundList.Description);
+        Assert.AreEqual(ListsDataServiceTestData.ListWhichExists.Id, foundList.Id);
+        Assert.AreEqual(ListsDataServiceTestData.ListWhichExists.Description, foundList.Description);
     }
 
     /// <summary>
