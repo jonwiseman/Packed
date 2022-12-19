@@ -162,8 +162,61 @@ public class ItemsDataServiceShould : PackedTestBase
                     Name = itemName
                 }));
     }
-    
-    // TODO: add tests for getting specific items
+
+    /// <summary>
+    /// Test to ensure that retrieving a specific item from a list
+    /// that exists returns an accurate representation of the item
+    /// </summary>
+    [TestMethod]
+    public async Task ReturnSpecificItemWhenExists()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        var item = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
+        
+        // Act
+        var foundItem = await dataService.GetItemByIdAsync(
+            ItemsDataServiceTestData.ListWithTwoItems.Id, item.Id);
+        
+        // Assert
+        Assert.IsNotNull(foundItem);
+        Assert.AreEqual(item.Id, foundItem.Id);
+        Assert.AreEqual(item.Name, foundItem.Name);
+        Assert.AreEqual(item.Quantity, foundItem.Quantity);
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to retrieve a specific item
+    /// from a list which does not exist causes a <see cref="ListNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundExceptionOnGetSpecificWithInvalidList()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().Next(int.MinValue, 0);
+        
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.GetItemByIdAsync(randomNegativeId, randomNegativeId));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to retrieve a specific item which does not
+    /// exist from a list causes a <see cref="ItemNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseItemNotFoundExceptionOnGetSpecificWithInvalidItem()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().Next(int.MinValue, 0);
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ItemNotFoundException>(async () =>
+            await dataService.GetItemByIdAsync(ItemsDataServiceTestData.ListWithTwoItems.Id, randomNegativeId));
+    }
+
     // TODO: add tests for updating items
     // TODO: add tests for deleting items
 
