@@ -162,7 +162,7 @@ public class ItemsDataServiceShould : PackedTestBase
                     Name = itemName
                 }));
     }
-    
+
     /// <summary>
     /// Test to ensure that names are unique only inside a single list.
     /// In other words, a name can be re-used in multiple different lists
@@ -178,19 +178,19 @@ public class ItemsDataServiceShould : PackedTestBase
             .Items
             .First()
             .Name!;
-        
+
         // Create a new item with random quantity
         var newItem = new ItemDto
         {
             Name = itemName,
             Quantity = new Random().Next(1, int.MaxValue)
         };
-        
+
         // Act
         var returnedItem = await dataService.AddItemToListAsync(
             ItemsDataServiceTestData.ListWithNoItems.Id,
             newItem);
-        
+
         // Assert
         Assert.IsNotNull(returnedItem);
         Assert.AreEqual(itemName, returnedItem.Name);
@@ -207,11 +207,11 @@ public class ItemsDataServiceShould : PackedTestBase
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
         var item = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
-        
+
         // Act
         var foundItem = await dataService.GetItemByIdAsync(
             ItemsDataServiceTestData.ListWithTwoItems.Id, item.Id);
-        
+
         // Assert
         Assert.IsNotNull(foundItem);
         Assert.AreEqual(item.Id, foundItem.Id);
@@ -229,7 +229,7 @@ public class ItemsDataServiceShould : PackedTestBase
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
         var randomNegativeId = new Random().Next(int.MinValue, 0);
-        
+
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
             await dataService.GetItemByIdAsync(randomNegativeId, randomNegativeId));
@@ -259,21 +259,21 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        
+
         // The item we'll update
         var itemToUpdate = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
-        
+
         // Create input DTO and change some properties
         var updatedItem = new ItemDto(itemToUpdate)
         {
             Name = itemToUpdate.Name + "UPDATED",
             Quantity = itemToUpdate.Quantity + 1
         };
-        
+
         // Act
         var returnedItem = await dataService.UpdateItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id,
             itemToUpdate.Id, updatedItem);
-        
+
         // Assert
         Assert.IsNotNull(returnedItem);
         Assert.AreEqual(itemToUpdate.Id, returnedItem.Id);
@@ -289,20 +289,20 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        
+
         // The item we'll update
         var itemToUpdate = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
-        
+
         // Create input DTO and change only the quantity
         var updatedItem = new ItemDto(itemToUpdate)
         {
             Quantity = itemToUpdate.Quantity + 1
         };
-        
+
         // Act
         var returnedItem = await dataService.UpdateItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id,
             itemToUpdate.Id, updatedItem);
-        
+
         // Assert
         Assert.IsNotNull(returnedItem);
         Assert.AreEqual(itemToUpdate.Id, returnedItem.Id);
@@ -319,16 +319,16 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        
+
         // The item we'll update
         var itemToUpdate = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
-        
+
         // Create input DTO and change only the quantity
         var updatedItem = new ItemDto(itemToUpdate)
         {
             Quantity = (itemToUpdate.Placements?.Count ?? 0) - 1
         };
-        
+
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ItemQuantityException>(async () =>
             await dataService.UpdateItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id,
@@ -348,7 +348,7 @@ public class ItemsDataServiceShould : PackedTestBase
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
-            await dataService.UpdateItemAsync(randomNegativeId, 
+            await dataService.UpdateItemAsync(randomNegativeId,
                 randomNegativeId, new ItemDto()));
     }
 
@@ -362,12 +362,11 @@ public class ItemsDataServiceShould : PackedTestBase
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
         var randomNegativeId = new Random().Next(int.MinValue, 0);
-        
+
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ItemNotFoundException>(async () =>
             await dataService.UpdateItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id,
                 randomNegativeId, new ItemDto()));
-
     }
 
     /// <summary>
@@ -379,11 +378,11 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        
+
         // The item we'll update
         var itemToUpdate = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
         var nameToDuplicate = ItemsDataServiceTestData.ListWithTwoItems.Items.Last()!.Name;
-        
+
         // Create input DTO and change some properties
         var updatedItem = new ItemDto(itemToUpdate)
         {
@@ -394,8 +393,55 @@ public class ItemsDataServiceShould : PackedTestBase
         await Assert.ThrowsExceptionAsync<DuplicateItemException>(async () =>
             await dataService.UpdateItemAsync(itemToUpdate.ListId, itemToUpdate.Id, updatedItem));
     }
-    
-    // TODO: add tests for deleting items
+
+    /// <summary>
+    /// Test to ensure that items which exist get deleted
+    /// </summary>
+    [TestMethod]
+    public async Task DeleteExistingItems()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        var itemToDelete = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!.Id;
+
+        // Act
+        await dataService.DeleteItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id, itemToDelete);
+
+        // Assert
+        UnitOfWorkMock.Verify(uow => uow.SaveChangesAsync());
+        UnitOfWorkMock.Verify(uow => uow.ItemRepository.Delete(It.IsAny<Item>()));
+    }
+
+    /// <summary>
+    /// Test to ensure that trying to delete an item from a list
+    /// which does not exists causes a <see cref="ListNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundExceptionWhenDeletingFromInvalidList()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().Next(int.MinValue, 0);
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.DeleteItemAsync(randomNegativeId, randomNegativeId));
+    }
+
+    /// <summary>
+    /// Test to ensure that trying to delete an item which does not exist
+    /// causes a <see cref="ItemNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseItemNotFoundExceptionWhenDeletingInvalidItem()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().Next(int.MinValue, 0);
+
+        await Assert.ThrowsExceptionAsync<ItemNotFoundException>(async () =>
+            await dataService.DeleteItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id, randomNegativeId));
+    }
 
     #endregion TEST METHODS
 }
