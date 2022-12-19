@@ -158,6 +158,15 @@ namespace Packed.API.Core.Services
                 throw new ItemQuantityException(
                     $"Currently have {foundItem.Placements.Count} placements, cannot reduce to {updatedItem.Quantity}");
             }
+            
+            // If an item with this name already exists in this list, then we won't even try to
+            // add it via our data store. Instead, throw an exception right away
+            if (foundList.Items
+                .Where(i => i.Id != itemId)
+                .Any(i => string.Equals(i.Name, updatedItem.Name)))
+            {
+                throw new DuplicateItemException("An item with the same name already exists");
+            }
 
             // If we found the specified item, then update it
             foundItem.Name = updatedItem.Name;

@@ -162,6 +162,40 @@ public class ItemsDataServiceShould : PackedTestBase
                     Name = itemName
                 }));
     }
+    
+    /// <summary>
+    /// Test to ensure that names are unique only inside a single list.
+    /// In other words, a name can be re-used in multiple different lists
+    /// </summary>
+    [TestMethod]
+    public async Task AllowTwoOfSameNameInTwoDifferentLists()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+
+        // Get the name of an item which already exists
+        var itemName = ItemsDataServiceTestData.ListWithTwoItems
+            .Items
+            .First()
+            .Name!;
+        
+        // Create a new item with random quantity
+        var newItem = new ItemDto
+        {
+            Name = itemName,
+            Quantity = new Random().Next(1, int.MaxValue)
+        };
+        
+        // Act
+        var returnedItem = await dataService.AddItemToListAsync(
+            ItemsDataServiceTestData.ListWithNoItems.Id,
+            newItem);
+        
+        // Assert
+        Assert.IsNotNull(returnedItem);
+        Assert.AreEqual(itemName, returnedItem.Name);
+        Assert.AreEqual(newItem.Quantity, returnedItem.Quantity);
+    }
 
     /// <summary>
     /// Test to ensure that retrieving a specific item from a list
@@ -217,7 +251,150 @@ public class ItemsDataServiceShould : PackedTestBase
             await dataService.GetItemByIdAsync(ItemsDataServiceTestData.ListWithTwoItems.Id, randomNegativeId));
     }
 
-    // TODO: add tests for updating items
+    /// <summary>
+    /// Test to ensure that an existing item can be updated
+    /// </summary>
+    [TestMethod]
+    public async Task UpdateExistingItem()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        
+        // The item we'll update
+        var itemToUpdate = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
+        
+        // Create input DTO and change some properties
+        var updatedItem = new ItemDto(itemToUpdate)
+        {
+            Name = itemToUpdate.Name + "UPDATED",
+            Quantity = itemToUpdate.Quantity + 1
+        };
+        
+        // Act
+        var returnedItem = await dataService.UpdateItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id,
+            itemToUpdate.Id, updatedItem);
+        
+        // Assert
+        Assert.IsNotNull(returnedItem);
+        Assert.AreEqual(itemToUpdate.Id, returnedItem.Id);
+        Assert.AreEqual(updatedItem.Name, returnedItem.Name);
+        Assert.AreEqual(updatedItem.Quantity, returnedItem.Quantity);
+    }
+
+    /// <summary>
+    /// Test to ensure that only updating an item's quantity doesn't cause a <see cref="DuplicateItemException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task UpdateItemWhenUpdatingOnlyQuantity()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        
+        // The item we'll update
+        var itemToUpdate = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
+        
+        // Create input DTO and change only the quantity
+        var updatedItem = new ItemDto(itemToUpdate)
+        {
+            Quantity = itemToUpdate.Quantity + 1
+        };
+        
+        // Act
+        var returnedItem = await dataService.UpdateItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id,
+            itemToUpdate.Id, updatedItem);
+        
+        // Assert
+        Assert.IsNotNull(returnedItem);
+        Assert.AreEqual(itemToUpdate.Id, returnedItem.Id);
+        Assert.AreEqual(updatedItem.Name, returnedItem.Name);
+        Assert.AreEqual(updatedItem.Quantity, returnedItem.Quantity);
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to set an item's quantity to any value lower than the
+    /// current count of placements causes a <see cref="ItemQuantityException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseItemQuantityExceptionWhenReducingQuantityBelowPlacementCount()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        
+        // The item we'll update
+        var itemToUpdate = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
+        
+        // Create input DTO and change only the quantity
+        var updatedItem = new ItemDto(itemToUpdate)
+        {
+            Quantity = (itemToUpdate.Placements?.Count ?? 0) - 1
+        };
+        
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ItemQuantityException>(async () =>
+            await dataService.UpdateItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id,
+                itemToUpdate.Id, updatedItem));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to update an item in a list
+    /// which does not exist causes a <see cref="ListNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundExceptionWhenListNotFound()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().Next(int.MinValue, 0);
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.UpdateItemAsync(randomNegativeId, 
+                randomNegativeId, new ItemDto()));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to update an item which doesn't exist
+    /// causes a <see cref="ItemNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseItemNotFoundExceptionWhenItemNotFound()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().Next(int.MinValue, 0);
+        
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ItemNotFoundException>(async () =>
+            await dataService.UpdateItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id,
+                randomNegativeId, new ItemDto()));
+
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to update an item to use the name of another item
+    /// in the same list causes a <see cref="DuplicateItemException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseDuplicateItemExceptionWhenDuplicatingItemName()
+    {
+        // Arrange
+        var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
+        
+        // The item we'll update
+        var itemToUpdate = ItemsDataServiceTestData.ListWithTwoItems.Items.First()!;
+        var nameToDuplicate = ItemsDataServiceTestData.ListWithTwoItems.Items.Last()!.Name;
+        
+        // Create input DTO and change some properties
+        var updatedItem = new ItemDto(itemToUpdate)
+        {
+            Name = nameToDuplicate,
+            Quantity = itemToUpdate.Quantity + 1
+        };
+
+        await Assert.ThrowsExceptionAsync<DuplicateItemException>(async () =>
+            await dataService.UpdateItemAsync(itemToUpdate.ListId, itemToUpdate.Id, updatedItem));
+    }
+    
     // TODO: add tests for deleting items
 
     #endregion TEST METHODS
