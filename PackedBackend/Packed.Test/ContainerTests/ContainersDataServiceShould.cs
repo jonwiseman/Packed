@@ -281,7 +281,59 @@ public class ContainersDataServiceShould : PackedTestBase
                 ListWithTwoContainers.Containers.First().Id, containerToUpdate));
     }
 
-    // TODO: add delete tests
+    /// <summary>
+    /// Test to ensure that containers can be deleted
+    /// </summary>
+    [DataTestMethod]
+    [DynamicData(nameof(ContainerData), dynamicDataDeclaringType: typeof(ContainersDataServiceTestData))]
+    public async Task DeleteContainers(Container container)
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+
+        // Act
+        await dataService.DeleteContainerAsync(container.ListId, container.Id);
+
+        // Assert
+        UnitOfWorkMock.Verify(uow =>
+            uow.ContainerRepository.Delete(It.IsAny<Container>()));
+        UnitOfWorkMock.Verify(uow => uow.SaveChangesAsync());
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to delete a container from
+    /// a list which does not exist causes a <see cref="ListNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundOnDeleteWithInvalidList()
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.DeleteContainerAsync(randomNegativeId, randomNegativeId));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to delete a container which does not exist
+    /// causes a <see cref="ContainerNotFoundException"/>
+    /// </summary>
+    [DataTestMethod]
+    [DynamicData(nameof(ListData), dynamicDataDeclaringType: typeof(ContainersDataServiceTestData))]
+    public async Task RaiseContainerNotFoundOnDeleteWithInvalidContainer(List list)
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var invalidContainerId = list.Containers.Any()
+            ? list.Containers.Max(c => c.Id) + 1
+            : 0;
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ContainerNotFoundException>(async () =>
+            await dataService.DeleteContainerAsync(list.Id, invalidContainerId));
+    }
 
     #endregion TEST METHODS
 }
