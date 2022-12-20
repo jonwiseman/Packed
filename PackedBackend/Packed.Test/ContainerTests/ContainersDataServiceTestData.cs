@@ -3,49 +3,46 @@
 
 using Packed.Data.Core.Entities;
 
-namespace Packed.Test.ItemTests;
+namespace Packed.Test.ContainerTests;
 
 /// <summary>
-/// Test data for tests relating to Items Data Service
+/// Test data for Containers Data Service tests
 /// </summary>
-public static class ItemsDataServiceTestData
+public static class ContainersDataServiceTestData
 {
     #region CONSTANT TEST DATA
 
     /// <summary>
-    /// A list which exists but has no items
+    /// A list which exists but has no containers
     /// </summary>
-    public static readonly List ListWithNoItems = new()
+    public static readonly List ListWithNoContainers = new()
     {
         Id = 1,
-        Description = "List with no items",
-        Items = new List<Item>(),
+        Description = "List with no containers",
         Containers = new List<Container>()
     };
 
     /// <summary>
-    /// A list which exists and has two items
+    /// A list which exists and has two containers
     /// </summary>
-    public static readonly List ListWithTwoItems = new()
+    public static readonly List ListWithTwoContainers = new()
     {
         Id = 2,
-        Description = "List with two items",
-        Items = new List<Item>()
+        Description = "List with two containers",
+        Containers = new List<Container>()
         {
             new()
             {
                 Id = 1,
                 ListId = 2,
-                Name = "First Item",
-                Quantity = 1,
+                Name = "First Container",
                 Placements = new List<Placement>()
             },
             new()
             {
                 Id = 2,
                 ListId = 2,
-                Name = "Second Item",
-                Quantity = 2,
+                Name = "Second Container",
                 Placements = new List<Placement>()
             }
         }
@@ -66,11 +63,11 @@ public static class ItemsDataServiceTestData
             {
                 new object[]
                 {
-                    ListWithNoItems
+                    ListWithNoContainers
                 },
                 new object[]
                 {
-                    ListWithTwoItems
+                    ListWithTwoContainers
                 }
             };
         }
