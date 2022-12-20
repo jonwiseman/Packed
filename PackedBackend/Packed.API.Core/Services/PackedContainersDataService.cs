@@ -155,6 +155,15 @@ namespace Packed.API.Core.Services
                 return new ContainerDto(foundContainer);
             }
 
+            // If another container has the same name, don't attempt to update data store
+            // Instead, go right ahead and throw an exception
+            if (foundList.Containers
+                .Where(c => c.Id != containerId)
+                .Any(c => string.Equals(c.Name, updatedContainer.Name)))
+            {
+                throw new DuplicateContainerException("A container with the same name already exists");
+            }
+
             // Now that we've found the container, we can make the actual update
             foundContainer.Name = updatedContainer.Name;
 

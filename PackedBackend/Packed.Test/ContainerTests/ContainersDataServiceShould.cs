@@ -198,7 +198,89 @@ public class ContainersDataServiceShould : PackedTestBase
             await dataService.GetContainerByIdAsync(list.Id, invalidId));
     }
 
-    // TODO: add update tests
+    /// <summary>
+    /// Test to ensure that existing containers can be updated
+    /// </summary>
+    [DataTestMethod]
+    [DynamicData(nameof(ContainerData), dynamicDataDeclaringType: typeof(ContainersDataServiceTestData))]
+    public async Task UpdateExistingContainer(Container container)
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var containerToUpdate = new ContainerDto()
+        {
+            Name = container.Name + "UPDATED"
+        };
+
+        // Act
+        var returnedContainer =
+            await dataService.UpdateContainerAsync(container.ListId, container.Id, containerToUpdate);
+
+        // Assert
+        Assert.IsNotNull(returnedContainer);
+        Assert.AreEqual(containerToUpdate.Name, returnedContainer.Name);
+        UnitOfWorkMock.Verify(uow =>
+            uow.ContainerRepository.Update(It.IsAny<Container>()));
+        UnitOfWorkMock.Verify(uow => uow.SaveChangesAsync());
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to update a container in a list
+    /// which does not exist causes a <see cref="ListNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundOnUpdateWithInvalidList()
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.UpdateContainerAsync(randomNegativeId, randomNegativeId,
+                new ContainerDto()));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to update a container
+    /// which doesn't exist causes a <see cref="ContainerNotFoundException"/>
+    /// </summary>
+    [DataTestMethod]
+    [DynamicData(nameof(ListData), dynamicDataDeclaringType: typeof(ContainersDataServiceTestData))]
+    public async Task RaiseContainerNotFoundOnUpdateWithInvalidContainer(List list)
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var invalidContainerId = list.Containers.Any()
+            ? list.Containers.Max(c => c.Id) + 1
+            : 0;
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ContainerNotFoundException>(async () =>
+            await dataService.UpdateContainerAsync(list.Id, invalidContainerId,
+                new ContainerDto()));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to update a container to have the same
+    /// name as another container in the same list causes a <see cref="DuplicateContainerException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseDuplicateContainerOnUpdateWhenDuplicatingName()
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var containerToUpdate = new ContainerDto()
+        {
+            Name = ListWithTwoContainers.Containers.Last().Name
+        };
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<DuplicateContainerException>(async () =>
+            await dataService.UpdateContainerAsync(ListWithTwoContainers.Id,
+                ListWithTwoContainers.Containers.First().Id, containerToUpdate));
+    }
+
     // TODO: add delete tests
 
     #endregion TEST METHODS
