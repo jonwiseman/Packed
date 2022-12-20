@@ -8,7 +8,7 @@ namespace Packed.Test.ListTests;
 /// <summary>
 /// Test data for List Data Service tests
 /// </summary>
-public static class ListDataServiceTestData
+public static class ListsDataServiceTestData
 {
     /// <summary>
     /// A list which actually exists
