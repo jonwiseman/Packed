@@ -81,7 +81,7 @@ public class ListsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedListsDataService(UnitOfWorkMock.Object);
-        var randomListId = new Random().Next(2, int.MaxValue);
+        var randomListId = new Random().GetRandomNegativeId();
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>

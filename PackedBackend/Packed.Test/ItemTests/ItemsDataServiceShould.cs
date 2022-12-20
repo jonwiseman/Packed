@@ -1,4 +1,4 @@
-// Date Created: 2022/12/16
+// Date Created: 2022/12/19
 // Created by: JSW
 
 using Moq;
@@ -85,7 +85,7 @@ public class ItemsDataServiceShould : PackedTestBase
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
 
         // Get a random integer ID which does not exist
-        var listId = new Random().Next(int.MinValue, 0);
+        var listId = new Random().GetRandomNegativeId();
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
@@ -130,7 +130,7 @@ public class ItemsDataServiceShould : PackedTestBase
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
 
         // Get a random integer ID which does not exist
-        var listId = new Random().Next(int.MinValue, 0);
+        var listId = new Random().GetRandomNegativeId();
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
@@ -228,7 +228,7 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        var randomNegativeId = new Random().Next(int.MinValue, 0);
+        var randomNegativeId = new Random().GetRandomNegativeId();
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
@@ -244,7 +244,7 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        var randomNegativeId = new Random().Next(int.MinValue, 0);
+        var randomNegativeId = new Random().GetRandomNegativeId();
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ItemNotFoundException>(async () =>
@@ -344,7 +344,7 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        var randomNegativeId = new Random().Next(int.MinValue, 0);
+        var randomNegativeId = new Random().GetRandomNegativeId();
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
@@ -361,7 +361,7 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        var randomNegativeId = new Random().Next(int.MinValue, 0);
+        var randomNegativeId = new Random().GetRandomNegativeId();
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ItemNotFoundException>(async () =>
@@ -421,7 +421,7 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        var randomNegativeId = new Random().Next(int.MinValue, 0);
+        var randomNegativeId = new Random().GetRandomNegativeId();
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
@@ -437,7 +437,7 @@ public class ItemsDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedItemsDataService(UnitOfWorkMock.Object);
-        var randomNegativeId = new Random().Next(int.MinValue, 0);
+        var randomNegativeId = new Random().GetRandomNegativeId();
 
         await Assert.ThrowsExceptionAsync<ItemNotFoundException>(async () =>
             await dataService.DeleteItemAsync(ItemsDataServiceTestData.ListWithTwoItems.Id, randomNegativeId));
