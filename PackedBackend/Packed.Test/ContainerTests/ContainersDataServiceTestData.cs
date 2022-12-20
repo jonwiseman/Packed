@@ -73,5 +73,26 @@ public static class ContainersDataServiceTestData
         }
     }
 
+    /// <summary>
+    /// Containers to use in test methods
+    /// </summary>
+    public static IEnumerable<object[]> ContainerData
+    {
+        get
+        {
+            return new[]
+            {
+                new[]
+                {
+                    ListWithTwoContainers.Containers.First()
+                },
+                new[]
+                {
+                    ListWithTwoContainers.Containers.Last()
+                }
+            };
+        }
+    }
+
     #endregion DYNAMIC TEST DATA
 }

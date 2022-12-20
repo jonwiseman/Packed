@@ -65,7 +65,14 @@ namespace Packed.API.Core.Services
         public async Task<ContainerDto> AddContainerAsync(int listId, ContainerDto newContainer)
         {
             // Get list. Although we won't use the return value, it ensures that the list actually exists
-            await GetList(listId);
+            var foundList = await GetList(listId);
+
+            // Before we even try to use data store, see if a container with the same name
+            // already exists in this list. If so, then throw an exception
+            if (foundList.Containers.Any(c => string.Equals(c.Name, newContainer.Name)))
+            {
+                throw new DuplicateContainerException("A container with the same name already exists");
+            }
 
             // If the list was found, then we will attempt to add the new container
             // Start by creating the entity we are going to add

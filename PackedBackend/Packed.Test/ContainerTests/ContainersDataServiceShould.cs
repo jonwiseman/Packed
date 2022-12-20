@@ -2,6 +2,7 @@
 // Created by: JSW
 
 using Moq;
+using Packed.API.Core.DTOs;
 using Packed.API.Core.Exceptions;
 using Packed.API.Core.Services;
 using Packed.Data.Core.Entities;
@@ -75,12 +76,130 @@ public class ContainersDataServiceShould : PackedTestBase
     {
         // Arrange
         var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
-        var randomNegativeId = new Random().Next(int.MinValue, 0);
+        var randomNegativeId = new Random().GetRandomNegativeId();
 
         // Act/Assert
         await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
             await dataService.GetContainersAsync(randomNegativeId));
     }
+
+    /// <summary>
+    /// Test to ensure that new containers can be added to lists
+    /// </summary>
+    [DataTestMethod]
+    [DynamicData(nameof(ListData), dynamicDataDeclaringType: typeof(ContainersDataServiceTestData))]
+    public async Task AddNewContainers(List list)
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var newContainer = new ContainerDto()
+        {
+            Name = "NEW CONTAINER"
+        };
+
+        // Act
+        var returnedContainer = await dataService.AddContainerAsync(list.Id, newContainer);
+
+        // Assert
+        Assert.IsNotNull(returnedContainer);
+        Assert.AreEqual(newContainer.Name, returnedContainer.Name);
+        UnitOfWorkMock
+            .Verify(uow => uow.ContainerRepository.Create(It.IsAny<Container>()));
+        UnitOfWorkMock
+            .Verify(uow => uow.SaveChangesAsync());
+    }
+
+    /// <summary>
+    /// Test to ensure that a new container can't be added to a list
+    /// which does not exist
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundExceptionWhenAddingToInvalidList()
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.AddContainerAsync(randomNegativeId, new ContainerDto()));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to add a container to a list
+    /// which already has a container with the same name causes a <see cref="DuplicateContainerException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseDuplicateContainerExceptionWhenAddingDuplicatedName()
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var newContainer = new ContainerDto()
+        {
+            Name = ListWithTwoContainers.Containers.First().Name!
+        };
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<DuplicateContainerException>(async () =>
+            await dataService.AddContainerAsync(ListWithTwoContainers.Id, newContainer));
+    }
+
+    /// <summary>
+    /// Test to ensure that a specific container can be retrieved from
+    /// a list
+    /// </summary>
+    [DataTestMethod]
+    [DynamicData(nameof(ContainerData), dynamicDataDeclaringType: typeof(ContainersDataServiceTestData))]
+    public async Task RetrieveSpecificContainer(Container container)
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+
+        // Act
+        var returnedContainer = await dataService.GetContainerByIdAsync(container.ListId, container.Id);
+
+        // Assert
+        Assert.IsNotNull(returnedContainer);
+        Assert.AreEqual(container.Name, returnedContainer.Name);
+    }
+
+    /// <summary>
+    /// Test to ensure that trying to retrieve a container from a list which does
+    /// not exist causes a <see cref="ListNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundExceptionWhenRetrievingSpecificContainerFromInvalidList()
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.GetContainerByIdAsync(randomNegativeId, randomNegativeId));
+    }
+
+    /// <summary>
+    /// Test to ensure that trying to retrieve a container which does not exist
+    /// causes a <see cref="ContainerNotFoundException"/>
+    /// </summary>
+    [DataTestMethod]
+    [DynamicData(nameof(ListData), dynamicDataDeclaringType: typeof(ContainersDataServiceTestData))]
+    public async Task RaiseContainerNotFoundExceptionWhenRetrievingInvalidContainer(List list)
+    {
+        // Arrange
+        var dataService = new PackedContainersDataService(UnitOfWorkMock.Object);
+        var invalidId = list.Containers?.Any() ?? false
+            ? list.Containers.Max(c => c.Id) + 1
+            : 0;
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ContainerNotFoundException>(async () =>
+            await dataService.GetContainerByIdAsync(list.Id, invalidId));
+    }
+
+    // TODO: add update tests
+    // TODO: add delete tests
 
     #endregion TEST METHODS
 }
