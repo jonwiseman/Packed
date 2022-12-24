@@ -92,5 +92,75 @@ public class PlacementsDataServiceShould : PackedTestBase
             await dataService.GetPlacementsForItemAsync(ListWithTwoItems.Id, randomNegativeId));
     }
 
+    /// <summary>
+    /// Test to ensure that a placement can be retrieved by ID
+    /// </summary>
+    [TestMethod]
+    public async Task GetSpecificPlacement()
+    {
+        // Arrange
+        var dataService = new PackedPlacementsDataService(UnitOfWorkMock.Object);
+        var placementToFind = ListWithTwoItems.Items.First().Placements.First();
+        var ids = (ListWithTwoItems.Id, ListWithTwoItems.Items.First().Id,
+            placementToFind.Id);
+
+        // Act
+        var foundPlacement = await dataService.GetPlacementByIdAsync(ids.Item1, ids.Item2, ids.Item3);
+
+        // Assert
+        Assert.IsNotNull(foundPlacement);
+        Assert.AreEqual(placementToFind.Id, foundPlacement.Id);
+        Assert.AreEqual(placementToFind.ContainerId, foundPlacement.ContainerId);
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to retrieve a specific placement for a
+    /// list which does not exist causes a <see cref="ListNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundOnGetSpecificForInvalidList()
+    {
+        // Arrange
+        var dataService = new PackedPlacementsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.GetPlacementByIdAsync(randomNegativeId, randomNegativeId, randomNegativeId));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to retrieve a specific placement for an
+    /// item which does not exist causes a <see cref="ItemNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseItemNotFoundOnGetSpecificForInvalidItem()
+    {
+        // Arrange
+        var dataService = new PackedPlacementsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ItemNotFoundException>(async () =>
+            await dataService.GetPlacementByIdAsync(ListWithTwoItems.Id, randomNegativeId, randomNegativeId));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to retrieve a specific placement
+    /// which does not exist causes a <see cref="PlacementNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaisePlacementNotFoundOnGetSpecificForInvalidPlacement()
+    {
+        // Arrange
+        var dataService = new PackedPlacementsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<PlacementNotFoundException>(async () =>
+            await dataService.GetPlacementByIdAsync(ListWithTwoItems.Id, ListWithTwoItems.Items.First().Id,
+                randomNegativeId));
+    }
+
     #endregion TEST METHODS
 }
