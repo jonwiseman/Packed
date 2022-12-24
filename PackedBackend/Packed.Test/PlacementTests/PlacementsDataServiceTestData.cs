@@ -92,5 +92,22 @@ public static class PlacementsDataServiceTestData
         }
     }
 
+    /// <summary>
+    /// All placements
+    /// </summary>
+    public static IEnumerable<object[]> PlacementData
+    {
+        get
+        {
+            return new[]
+            {
+                new object[]
+                {
+                    ListWithTwoItems.Items.First().Placements.Single()
+                }
+            };
+        }
+    }
+
     #endregion DYNAMIC TEST DATA
 }

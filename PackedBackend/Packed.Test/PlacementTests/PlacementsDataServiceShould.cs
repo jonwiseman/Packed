@@ -265,5 +265,75 @@ public class PlacementsDataServiceShould : PackedTestBase
             }));
     }
 
+    /// <summary>
+    /// Test to ensure that placements can be deleted
+    /// </summary>
+    /// <param name="placement">Placement</param>
+    [DataTestMethod]
+    [DynamicData(nameof(PlacementData), dynamicDataDeclaringType: typeof(PlacementsDataServiceTestData))]
+    public async Task DeletePlacement(Placement placement)
+    {
+        // Arrange
+        var dataService = new PackedPlacementsDataService(UnitOfWorkMock.Object);
+
+        // Act
+        await dataService.DeletePlacementAsync(ListWithTwoItems.Id, placement.ItemId, placement.Id);
+
+        // Assert
+        UnitOfWorkMock
+            .Verify(uow => uow.PlacementRepository.Delete(It.IsAny<Placement>()));
+        UnitOfWorkMock
+            .Verify(uow => uow.SaveChangesAsync());
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to delete a placement in a list
+    /// which does not exist causes a <see cref="ListNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseListNotFoundOnDeleteForInvalidList()
+    {
+        // Arrange
+        var dataService = new PackedPlacementsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ListNotFoundException>(async () =>
+            await dataService.DeletePlacementAsync(randomNegativeId, randomNegativeId, randomNegativeId));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to delete a placement for an item
+    /// which does not exist causes a <see cref="ItemNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaiseItemNotFoundOnDeleteForInvalidItem()
+    {
+        // Arrange
+        var dataService = new PackedPlacementsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<ItemNotFoundException>(async () =>
+            await dataService.DeletePlacementAsync(ListWithTwoItems.Id, randomNegativeId, randomNegativeId));
+    }
+
+    /// <summary>
+    /// Test to ensure that attempting to delete a placement which does not exist
+    /// causes a <see cref="PlacementNotFoundException"/>
+    /// </summary>
+    [TestMethod]
+    public async Task RaisePlacementNotFoundOnDeleteForInvalidPlacement()
+    {
+        // Arrange
+        var dataService = new PackedPlacementsDataService(UnitOfWorkMock.Object);
+        var randomNegativeId = new Random().GetRandomNegativeId();
+
+        // Act/Assert
+        await Assert.ThrowsExceptionAsync<PlacementNotFoundException>(async () =>
+            await dataService.DeletePlacementAsync(ListWithTwoItems.Id, ListWithTwoItems.Items.First().Id,
+                randomNegativeId));
+    }
+
     #endregion TEST METHODS
 }
