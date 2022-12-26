@@ -79,6 +79,8 @@ public class ListsDataServiceShould : PackedTestBase
     [TestMethod]
     public async Task RaiseListNotFoundExceptionWhenListDoesNotExist()
     {
+
+        throw new Exception();
         // Arrange
         var dataService = new PackedListsDataService(UnitOfWorkMock.Object);
         var randomListId = new Random().GetRandomNegativeId();
