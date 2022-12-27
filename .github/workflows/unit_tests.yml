@@ -18,4 +18,4 @@ jobs:
       - name: Build
         run: dotnet build --no-restore PackedBackend
       - name: Test
-        run: dotnet test --no-build --verbosity normal PackedBackend
+        run: dotnet test --no-build --verbosity normal PackedBackend/Builds/Packed.Test.dll

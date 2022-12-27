@@ -3,3 +3,4 @@ gen/**/*
 **/obj/**/*
 **/bin/**/*
 **/*.DotSettings.*
+**/Builds/**/*

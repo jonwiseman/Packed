@@ -1,0 +1,5 @@
+<Project>
+    <PropertyGroup>
+        <OutDir>$(MSBuildThisFileDirectory)\Builds\</OutDir>
+    </PropertyGroup>
+</Project>
