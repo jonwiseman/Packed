@@ -3,7 +3,7 @@
 
 using Newtonsoft.Json;
 
-namespace Packed.API.Client.Extensions;
+namespace Packed.API.Extensions;
 
 public static class StreamExtensions
 {

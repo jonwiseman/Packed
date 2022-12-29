@@ -4,9 +4,9 @@
 using System.Net;
 using Newtonsoft.Json;
 using Packed.API.Client.Exceptions;
-using Packed.API.Client.Extensions;
 using Packed.API.Core.DTOs;
 using Packed.API.Core.Exceptions;
+using Packed.API.Extensions;
 
 namespace Packed.API.Client;
 
@@ -54,7 +54,10 @@ public class PackedApiClient : IPackedApiClient
     public async Task<IEnumerable<ListDto>> GetAllListsAsync()
     {
         // Create request message
-        var request = new HttpRequestMessage(HttpMethod.Get, "lists");
+        var request = new HttpRequestMessage(HttpMethod.Get, "lists")
+        {
+            Headers = { { "Accept", "application/json" } }
+        };
 
         // Initialize a token source
         using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));

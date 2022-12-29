@@ -1,4 +1,4 @@
-name: Unit Tests
+name: Unit and Contract Tests
 
 on:
   push:
@@ -17,5 +17,9 @@ jobs:
         run: dotnet restore PackedBackend
       - name: Build
         run: dotnet build --no-restore PackedBackend
-      - name: Test
+      - name: Unit Tests
         run: dotnet test --no-build --verbosity normal PackedBackend/Builds/Packed.Test.dll
+      - name: Consumer Tests
+        run: dotnet test --no-build --verbosity normal PackedBackend/Builds/Packed.ContractTest.Consumer.dll
+      - name: Provider Tests
+        run: dotnet test --no-build --verbosity normal PackedBackend/Builds/Packed.ContractTest.Provider.dll

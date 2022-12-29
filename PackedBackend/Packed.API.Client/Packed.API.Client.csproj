@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Packed.API.Core\Packed.API.Core.csproj" />
+      <ProjectReference Include="..\Packed.API\Packed.API.csproj" />
     </ItemGroup>
 
     <ItemGroup>
