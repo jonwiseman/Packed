@@ -42,7 +42,7 @@ public interface IPackedApiClient
     /// <summary>
     /// Create a new list
     /// </summary>
-    /// <param name="newList">New list</param>
+    /// <param name="description">List description</param>
     /// <returns>
     /// A representation of the new list and a link to the created list
     /// </returns>
@@ -50,7 +50,7 @@ public interface IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    Task<(ListDto, string)> CreateNewListAsync(ListDto newList);
+    Task<(ListDto, string)> CreateNewListAsync(string description);
 
     /// <summary>
     /// Update an existing list

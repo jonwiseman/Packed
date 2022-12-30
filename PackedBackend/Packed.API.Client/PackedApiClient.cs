@@ -2,7 +2,9 @@
 // Created by: JSW
 
 using System.Net;
+using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Packed.API.Client.Exceptions;
 using Packed.API.Core.DTOs;
 using Packed.API.Core.Exceptions;
@@ -133,7 +135,7 @@ public class PackedApiClient : IPackedApiClient
     /// <summary>
     /// Create a new list
     /// </summary>
-    /// <param name="newList">New list</param>
+    /// <param name="description">New list</param>
     /// <returns>
     /// A representation of the new list
     /// </returns>
@@ -141,12 +143,14 @@ public class PackedApiClient : IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    public async Task<(ListDto, string)> CreateNewListAsync(ListDto newList)
+    public async Task<(ListDto, string)> CreateNewListAsync(string description)
     {
         // Create request message with body
         var request = new HttpRequestMessage(HttpMethod.Post, "lists")
         {
-            Content = new StringContent(JsonConvert.SerializeObject(newList))
+            Content = new StringContent(JsonConvert.SerializeObject(new { description },
+                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }),
+                Encoding.UTF8, "application/json")
         };
 
         // Initialize a token source
@@ -168,7 +172,7 @@ public class PackedApiClient : IPackedApiClient
 
             // List with same description already exists
             HttpStatusCode.Conflict =>
-                throw new DuplicateListException($"List with description {newList.Description} already exists"),
+                throw new DuplicateListException($"List with description {description} already exists"),
 
             // Errors documented in OpenAPI specification
             HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.InternalServerError =>

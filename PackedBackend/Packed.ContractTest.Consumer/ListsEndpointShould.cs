@@ -81,6 +81,7 @@ public class ListsEndpointShould
                 }, 1)
             }, 1));
 
+        // Act/Assert
         await _pactBuilder.VerifyAsync(async ctx =>
         {
             var httpClient = HttpClientFactory.Create();
@@ -94,4 +95,46 @@ public class ListsEndpointShould
     }
 
     #endregion GET LISTS
+
+    #region ADD LIST
+
+    /// <summary>
+    /// Test to ensure that new lists can be created
+    /// </summary>
+    [TestMethod]
+    public async Task CreateNewList()
+    {
+        // Arrange
+        _pactBuilder
+            .UponReceiving("A POST request to add a new list")
+            .WithRequest(HttpMethod.Post, "/lists")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                description = new TypeMatcher("First list")
+            })
+            .WillRespond()
+            .WithStatus(HttpStatusCode.Created)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                listId = new TypeMatcher(1),
+                description = new TypeMatcher("First list")
+            });
+
+        // Act/Assert
+        await _pactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            var createdList = await client.CreateNewListAsync("First list");
+
+            Assert.IsNotNull(createdList.Item1);
+            Assert.AreEqual("First list", createdList.Item1.Description);
+        });
+    }
+
+    #endregion ADD LIST
 }
