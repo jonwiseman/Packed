@@ -20,7 +20,7 @@ public class PackedItem
     /// Name of the item
     /// </summary>
     [JsonProperty("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
 
     /// <summary>
     /// Total count of this item in the list
@@ -32,5 +32,5 @@ public class PackedItem
     /// All placements for this item
     /// </summary>
     [JsonProperty("placements")]
-    public List<PackedPlacement> Placements { get; set; }
+    public List<PackedPlacement> Placements { get; set; } = null!;
 }

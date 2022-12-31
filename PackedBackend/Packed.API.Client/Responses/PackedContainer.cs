@@ -20,5 +20,5 @@ public class PackedContainer
     /// Container's name
     /// </summary>
     [JsonProperty("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
 }

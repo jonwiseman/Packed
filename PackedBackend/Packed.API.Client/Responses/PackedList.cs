@@ -20,17 +20,17 @@ public class PackedList
     /// List description
     /// </summary>
     [JsonProperty("description")]
-    public string Description { get; set; }
+    public string Description { get; set; } = null!;
 
     /// <summary>
     /// All items associated with this list
     /// </summary>
     [JsonProperty("items")]
-    public List<PackedItem> Items { get; set; }
+    public List<PackedItem> Items { get; set; } = null!;
 
     /// <summary>
     /// All containers associated with this list
     /// </summary>
     [JsonProperty("containers")]
-    public List<PackedContainer> Containers { get; set; }
+    public List<PackedContainer> Containers { get; set; } = null!;
 }
