@@ -3,6 +3,7 @@
 
 using Newtonsoft.Json;
 using Packed.API.Client.Exceptions;
+using Packed.API.Client.Responses;
 using Packed.API.Core.DTOs;
 using Packed.API.Core.Exceptions;
 
@@ -24,7 +25,7 @@ public interface IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    Task<IEnumerable<ListDto>> GetAllListsAsync();
+    Task<IEnumerable<PackedList>> GetAllListsAsync();
 
     /// <summary>
     /// Retrieve the list with the specified ID, if it exists
@@ -37,7 +38,7 @@ public interface IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    Task<ListDto> GetListByIdAsync(int listId);
+    Task<PackedList> GetListByIdAsync(int listId);
 
     /// <summary>
     /// Create a new list
@@ -50,7 +51,7 @@ public interface IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    Task<(ListDto, string)> CreateNewListAsync(string description);
+    Task<(PackedList, string)> CreateNewListAsync(string description);
 
     /// <summary>
     /// Update an existing list
@@ -64,7 +65,7 @@ public interface IPackedApiClient
     /// <exception cref="DuplicateListException">List with given description already exists</exception>    /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    Task<ListDto> UpdateListAsync(int listId, ListDto updatedList);
+    Task<PackedList> UpdateListAsync(int listId, ListDto updatedList);
 
     /// <summary>
     /// Delete list with given ID

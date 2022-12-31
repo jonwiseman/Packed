@@ -6,6 +6,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Packed.API.Client.Exceptions;
+using Packed.API.Client.Responses;
 using Packed.API.Core.DTOs;
 using Packed.API.Core.Exceptions;
 using Packed.API.Extensions;
@@ -53,7 +54,7 @@ public class PackedApiClient : IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    public async Task<IEnumerable<ListDto>> GetAllListsAsync()
+    public async Task<IEnumerable<PackedList>> GetAllListsAsync()
     {
         // Create request message
         var request = new HttpRequestMessage(HttpMethod.Get, "lists")
@@ -75,7 +76,7 @@ public class PackedApiClient : IPackedApiClient
         return response.StatusCode switch
         {
             // API should return all existing list
-            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<List<ListDto>>(),
+            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<List<PackedList>>(),
 
             // Errors documented in OpenAPI specification
             HttpStatusCode.Unauthorized or HttpStatusCode.InternalServerError =>
@@ -98,7 +99,7 @@ public class PackedApiClient : IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    public async Task<ListDto> GetListByIdAsync(int listId)
+    public async Task<PackedList> GetListByIdAsync(int listId)
     {
         // Create request message
         var request = new HttpRequestMessage(HttpMethod.Get, $"lists/{listId}");
@@ -117,7 +118,7 @@ public class PackedApiClient : IPackedApiClient
         return response.StatusCode switch
         {
             // API should return specified list
-            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<ListDto>(),
+            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<PackedList>(),
 
             // List could not be found
             HttpStatusCode.NotFound => throw new ListNotFoundException($"List with ID {listId} not found"),
@@ -143,7 +144,7 @@ public class PackedApiClient : IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    public async Task<(ListDto, string)> CreateNewListAsync(string description)
+    public async Task<(PackedList, string)> CreateNewListAsync(string description)
     {
         // Create request message with body
         var request = new HttpRequestMessage(HttpMethod.Post, "lists")
@@ -167,7 +168,7 @@ public class PackedApiClient : IPackedApiClient
         return response.StatusCode switch
         {
             // API should return representation of created list
-            HttpStatusCode.Created => (await stream.ReadAndDeserializeFromJson<ListDto>(),
+            HttpStatusCode.Created => (await stream.ReadAndDeserializeFromJson<PackedList>(),
                 response.Headers.Location?.ToString() ?? string.Empty),
 
             // List with same description already exists
@@ -197,7 +198,7 @@ public class PackedApiClient : IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    public async Task<ListDto> UpdateListAsync(int listId, ListDto updatedList)
+    public async Task<PackedList> UpdateListAsync(int listId, ListDto updatedList)
     {
         // Create request message with body
         var request = new HttpRequestMessage(HttpMethod.Put, $"lists/{listId}")
@@ -219,7 +220,7 @@ public class PackedApiClient : IPackedApiClient
         return response.StatusCode switch
         {
             // API should return representation of updated list
-            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<ListDto>(),
+            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<PackedList>(),
 
             // List could not be found
             HttpStatusCode.NotFound => throw new ListNotFoundException($"List with ID {listId} could not be found"),

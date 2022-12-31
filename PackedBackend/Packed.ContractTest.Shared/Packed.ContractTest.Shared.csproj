@@ -4,4 +4,8 @@
         <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Packed.Data.Core\Packed.Data.Core.csproj" />
+    </ItemGroup>
+
 </Project>

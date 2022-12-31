@@ -40,7 +40,7 @@ namespace Packed.API.Core.DTOs
         /// Placement ID
         /// </summary>
         [JsonPropertyName("placementId")]
-        public int Id { get; private set; }
+        public virtual int Id { get; private set; }
 
         /// <summary>
         /// Container ID

@@ -12,5 +12,10 @@ namespace Packed.ContractTest.Shared
         /// State where one list exists
         /// </summary>
         public const string ListExists = "there is at least one list";
+
+        /// <summary>
+        /// State where a list with the same description as one which is going to be added already exists
+        /// </summary>
+        public const string DuplicateList = "there is a list with the same description";
     }
 }

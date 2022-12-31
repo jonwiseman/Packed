@@ -3,6 +3,7 @@
 
 using System.Net;
 using Moq;
+using Npgsql;
 using Packed.API.Extensions;
 using Packed.ContractTest.Shared;
 using Packed.Data.Core.Entities;
@@ -21,7 +22,17 @@ public class ProviderStateMiddleware
     /// A dictionary which maps provider states to corresponding actions to set up those provider states
     /// </summary>
     private readonly IDictionary<string, Action<IDictionary<string, string>, Mock<IListRepository>>>
-        _providerStateActions;
+        _providerStateActions = new Dictionary<string, Action<IDictionary<string, string>, Mock<IListRepository>>>()
+        {
+            {
+                ProviderStates.ListExists.ToLower(),
+                EnsureOneListExists
+            },
+            {
+                ProviderStates.DuplicateList.ToLower(),
+                EnsureDuplicateListExists
+            }
+        };
 
     /// <summary>
     /// The next middleware in the pipeline
@@ -41,14 +52,6 @@ public class ProviderStateMiddleware
         // Set next middleware so we can invoke it in the case where request
         // is not for provider state setup
         _next = next ?? throw new ArgumentNullException(nameof(next));
-
-        _providerStateActions = new Dictionary<string, Action<IDictionary<string, string>, Mock<IListRepository>>>()
-        {
-            {
-                ProviderStates.ListExists.ToLower(),
-                EnsureOneListExists
-            }
-        };
     }
 
     #endregion CONSTRUCTOR
@@ -106,55 +109,32 @@ public class ProviderStateMiddleware
     /// </summary>
     /// <param name="parameters">Parameters</param>
     /// <param name="listRepositoryMock">List repository mock</param>
-    private void EnsureOneListExists(IDictionary<string, string> parameters, Mock<IListRepository> listRepositoryMock)
+    private static void EnsureOneListExists(IDictionary<string, string> parameters,
+        Mock<IListRepository> listRepositoryMock)
     {
         listRepositoryMock
             .Setup(r => r.GetAllListsAsync())
             .ReturnsAsync(new List<List>
             {
-                new()
-                {
-                    Id = 1,
-                    Description = "First list",
-                    Items = new List<Item>
-                    {
-                        new()
-                        {
-                            Id = 1,
-                            ListId = 1,
-                            Name = "First Item",
-                            Quantity = 1,
-                            Placements = new List<Placement>
-                            {
-                                new()
-                                {
-                                    Id = 1,
-                                    ItemId = 1,
-                                    ContainerId = 1
-                                }
-                            }
-                        }
-                    },
-                    Containers = new List<Container>
-                    {
-                        new()
-                        {
-                            Id = 1,
-                            ListId = 1,
-                            Name = "First Container",
-                            Placements = new List<Placement>
-                            {
-                                new()
-                                {
-                                    Id = 1,
-                                    ItemId = 1,
-                                    ContainerId = 1
-                                }
-                            }
-                        }
-                    }
-                }
+                ContractData.StandardList
             });
+    }
+
+    /// <summary>
+    /// Handle the case where we are simulating attempting to add a new list with a description
+    /// that is already in use
+    /// </summary>
+    /// <param name="parameters">Parameters</param>
+    /// <param name="listRepositoryMock">List repository mock</param>
+    private static void EnsureDuplicateListExists(IDictionary<string, string> parameters,
+        Mock<IListRepository> listRepositoryMock)
+    {
+        listRepositoryMock
+            .Setup(r => r.Create(It.IsAny<List>()))
+            .Throws(() =>
+                new Exception(string.Empty,
+                    new PostgresException(string.Empty, string.Empty, string.Empty,
+                        PostgresErrorCodes.UniqueViolation)));
     }
 
     #endregion PROVIDER STATE SETUPS

@@ -699,7 +699,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#components/schemas/ApiError"
+            $ref: "#/components/schemas/ApiError"
           example:
             type: "errors/BadRequest"
             title: "Bad Request"
@@ -713,7 +713,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#components/schemas/ApiError"
+            $ref: "#/components/schemas/ApiError"
           example:
             type: "errors/Unauthorized"
             title: "Unauthorized"
@@ -727,7 +727,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#components/schemas/ApiError"
+            $ref: "#/components/schemas/ApiError"
           example:
             type: "errors/NotFound"
             title: "Resource Not Found"
@@ -741,7 +741,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#components/schemas/ApiError"
+            $ref: "#/components/schemas/ApiError"
           example:
             type: "errors/Conflict"
             title: "Resource Conflict"

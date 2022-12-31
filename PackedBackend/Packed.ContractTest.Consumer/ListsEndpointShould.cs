@@ -3,9 +3,12 @@
 
 using System.Net;
 using Packed.API.Client;
+using Packed.API.Client.Responses;
+using Packed.API.Core.Exceptions;
 using Packed.ContractTest.Shared;
 using PactNet;
 using PactNet.Matchers;
+using static Packed.ContractTest.Shared.ContractData;
 
 namespace Packed.ContractTest.Consumer;
 
@@ -61,36 +64,59 @@ public class ListsEndpointShould
             .WithHeader("Content-Type", "application/json")
             .WithJsonBody(new MinMaxTypeMatcher(new
             {
-                listId = new TypeMatcher(1),
-                description = new TypeMatcher("First list"),
+                listId = new TypeMatcher(StandardList.Id),
+                description = new TypeMatcher(StandardList.Description),
                 items = new MinMaxTypeMatcher(new
                 {
-                    itemId = new TypeMatcher(1),
-                    name = new TypeMatcher("First item"),
-                    quantity = new TypeMatcher(1),
+                    itemId = new TypeMatcher(StandardItem.Id),
+                    name = new TypeMatcher(StandardItem.Name),
+                    quantity = new TypeMatcher(StandardItem.Quantity),
                     placements = new MinMaxTypeMatcher(new
                     {
-                        placementId = new TypeMatcher(1),
-                        containerId = new TypeMatcher(1)
+                        placementId = new TypeMatcher(StandardPlacement.Id),
+                        containerId = new TypeMatcher(StandardPlacement.ContainerId)
                     }, 1)
                 }, 1),
                 containers = new MinMaxTypeMatcher(new
                 {
-                    containerId = new TypeMatcher(1),
-                    name = new TypeMatcher("First container")
+                    containerId = new TypeMatcher(StandardContainer.Id),
+                    name = new TypeMatcher(StandardContainer.Name)
                 }, 1)
             }, 1));
 
-        // Act/Assert
         await _pactBuilder.VerifyAsync(async ctx =>
         {
             var httpClient = HttpClientFactory.Create();
             httpClient.BaseAddress = ctx.MockServerUri;
             var client = new PackedApiClient(httpClient);
 
-            var lists = await client.GetAllListsAsync();
+            // Act
+            var lists = (await client.GetAllListsAsync()).ToList();
+
+            // Assert
             Assert.IsNotNull(lists);
-            Assert.AreNotEqual(0, lists.Count());
+            Assert.AreEqual(1, lists.Count);
+
+            // Ensure list deserialized correctly
+            var list = lists.Single();
+            Assert.AreEqual(StandardList.Id, list.Id);
+            Assert.AreEqual(StandardList.Description, list.Description);
+
+            // Ensure item deserialized correctly
+            var item = list.Items.Single();
+            Assert.AreEqual(StandardItem.Id, item.Id);
+            Assert.AreEqual(StandardItem.Name, item.Name);
+            Assert.AreEqual(StandardItem.Quantity, item.Quantity);
+
+            // Ensure placement deserialized correctly
+            var placement = item.Placements.Single();
+            Assert.AreEqual(StandardPlacement.Id, placement.Id);
+            Assert.AreEqual(StandardPlacement.ContainerId, placement.ContainerId);
+
+            // Ensure container deserialized correctly
+            var container = list.Containers.Single();
+            Assert.AreEqual(StandardContainer.Id, container.Id);
+            Assert.AreEqual(StandardContainer.Name, container.Name);
         });
     }
 
@@ -111,28 +137,79 @@ public class ListsEndpointShould
             .WithHeader("Content-Type", "application/json; charset=utf-8")
             .WithJsonBody(new
             {
-                description = new TypeMatcher("First list")
+                description = new TypeMatcher(StandardList.Description)
             })
             .WillRespond()
             .WithStatus(HttpStatusCode.Created)
             .WithHeader("Content-Type", "application/json")
             .WithJsonBody(new
             {
-                listId = new TypeMatcher(1),
-                description = new TypeMatcher("First list")
+                listId = new TypeMatcher(StandardList.Id),
+                description = new TypeMatcher(StandardList.Description),
+                items = Array.Empty<PackedItem>(),
+                containers = Array.Empty<PackedContainer>()
             });
 
-        // Act/Assert
         await _pactBuilder.VerifyAsync(async ctx =>
         {
             var httpClient = HttpClientFactory.Create();
             httpClient.BaseAddress = ctx.MockServerUri;
             var client = new PackedApiClient(httpClient);
 
-            var createdList = await client.CreateNewListAsync("First list");
+            // Act
+            var (list, _) = await client.CreateNewListAsync(StandardList.Description);
 
-            Assert.IsNotNull(createdList.Item1);
-            Assert.AreEqual("First list", createdList.Item1.Description);
+            // Assert
+            Assert.IsNotNull(list);
+            Assert.AreEqual(StandardList.Id, list.Id);
+            Assert.AreEqual(StandardList.Description, list.Description);
+            Assert.AreEqual(0, list.Items.Count);
+            Assert.AreEqual(0, list.Containers.Count);
+        });
+    }
+
+    // TODO: add test for bad request
+
+    /// <summary>
+    /// Test to ensure that attempting to create a duplicate list will return an HTTP 409 Conflict
+    /// </summary>
+    [TestMethod]
+    public async Task ReturnConflictWhenCreatingDuplicateList()
+    {
+        // Arrange
+        _pactBuilder
+            .UponReceiving("A POST request to add a new list")
+            .Given(ProviderStates.DuplicateList)
+            .WithRequest(HttpMethod.Post, "/lists")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                // Intentionally not using a type matcher here so that this value is always sent
+                description = StandardList.Description
+            })
+            .WillRespond()
+            .WithStatus(HttpStatusCode.Conflict)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                type = Match.Type("errors/Conflict"),
+                title = Match.Type("Conflict"),
+                status = Match.Type((int)HttpStatusCode.Conflict),
+                detail = Match.Type("A list with the same description already exists"),
+                instance = Match.Type(new Uri("https://packed.api/lists")),
+                errorId = Match.Type(ErrorGuid),
+                timestamp = Match.Type(ErrorTime)
+            });
+
+        await _pactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act/Assert
+            await Assert.ThrowsExceptionAsync<DuplicateListException>(async () =>
+                await client.CreateNewListAsync(StandardList.Description));
         });
     }
 
