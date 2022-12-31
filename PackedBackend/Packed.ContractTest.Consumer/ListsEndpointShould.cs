@@ -411,5 +411,44 @@ public class ListsEndpointShould
         });
     }
 
+    /// <summary>
+    /// Test to ensure that attempting to retrieve a specific list when the list ID param
+    /// is wrong returns an HTTP 400 Bad Request
+    /// </summary>
+    [TestMethod]
+    public async Task ReturnBadRequestOnGetSpecificWhenQueryParamWrong()
+    {
+        // Arrange
+        _pactBuilder
+            .UponReceiving("A GET request for a specific list")
+            .Given(ProviderStates.RequestIsIncorrectlyFormatted)
+            .WithRequest(HttpMethod.Get, "/lists/-1")
+            .WithHeader("Accept", "application/json")
+            .WillRespond()
+            .WithStatus(HttpStatusCode.BadRequest)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                type = "errors/BadRequest",
+                title = "Bad Request",
+                status = (int)HttpStatusCode.BadRequest,
+                detail = Match.Type("Client made an improperly formatted request"),
+                instance = Match.Type(new Uri("https://packed.api/lists")),
+                errorId = Match.Type(ErrorGuid),
+                timestamp = Match.Type(ErrorTime)
+            });
+
+        await _pactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act/Assert
+            await Assert.ThrowsExceptionAsync<PackedApiClientException>(async () =>
+                await client.GetListByIdAsync(-1));
+        });
+    }
+
     #endregion GET LIST
 }
