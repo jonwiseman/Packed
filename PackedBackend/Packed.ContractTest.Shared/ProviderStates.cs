@@ -14,6 +14,11 @@ namespace Packed.ContractTest.Shared
         public const string ListExists = "there is at least one list";
 
         /// <summary>
+        /// State where the server encounters an exception while retrieving all lists
+        /// </summary>
+        public const string GetListsThrowsException = "retrieving all lists throws an exception";
+
+        /// <summary>
         /// State where a list with the same description as one which is going to be added already exists
         /// </summary>
         public const string DuplicateList = "there is a list with the same description";

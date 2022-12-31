@@ -121,6 +121,44 @@ public class ListsEndpointShould
         });
     }
 
+    /// <summary>
+    /// Test to ensure that an HTTP 500 Internal Server Error with correct body is returned
+    /// when an unexpected exception occurs on the server
+    /// </summary>
+    [TestMethod]
+    public async Task ReturnInternalServerErrorOnExceptionWhenGettingAllLists()
+    {
+        // Arrange
+        _pactBuilder
+            .UponReceiving("A GET request to retrieve all lists")
+            .Given(ProviderStates.GetListsThrowsException)
+            .WithRequest(HttpMethod.Get, "/lists")
+            .WillRespond()
+            .WithStatus(HttpStatusCode.InternalServerError)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                type = "errors/InternalServerError",
+                title = "Internal Server Error",
+                status = (int)HttpStatusCode.InternalServerError,
+                detail = "An internal server error occurred during the processing of the request",
+                instance = Match.Type(new Uri("https://packed.api/lists")),
+                errorId = Match.Type(ErrorGuid),
+                timestamp = Match.Type(ErrorTime)
+            });
+
+        await _pactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act/Assert
+            await Assert.ThrowsExceptionAsync<PackedApiClientException>(async () =>
+                await client.GetAllListsAsync());
+        });
+    }
+
     #endregion GET LISTS
 
     #region ADD LIST

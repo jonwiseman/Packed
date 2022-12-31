@@ -29,6 +29,10 @@ public class ProviderStateMiddleware
                 EnsureOneListExists
             },
             {
+                ProviderStates.GetListsThrowsException,
+                EnsureGettingListsThrowsExceptions
+            },
+            {
                 ProviderStates.DuplicateList.ToLower(),
                 EnsureDuplicateListExists
             },
@@ -127,6 +131,19 @@ public class ProviderStateMiddleware
             {
                 ContractTestData.StandardList
             });
+    }
+
+    /// <summary>
+    /// Handle states that require there to be one list which exists
+    /// </summary>
+    /// <param name="parameters">Parameters</param>
+    /// <param name="listRepositoryMock">List repository mock</param>
+    private static void EnsureGettingListsThrowsExceptions(IDictionary<string, string> parameters,
+        Mock<IListRepository> listRepositoryMock)
+    {
+        listRepositoryMock
+            .Setup(r => r.GetAllListsAsync())
+            .Throws(() => new Exception());
     }
 
     /// <summary>
