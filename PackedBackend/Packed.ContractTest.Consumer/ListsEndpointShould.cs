@@ -256,7 +256,49 @@ public class ListsEndpointShould
         });
     }
 
-    // TODO: add HTTP 500 response
+    /// <summary>
+    /// Test to ensure that an unexpected error on the server returns an appropriately
+    /// formatted body 
+    /// </summary>
+    [TestMethod]
+    public async Task ReturnInternalServerErrorOnExceptionWhenCreatingList()
+    {
+        // Arrange
+        _pactBuilder
+            .UponReceiving("A POST request to add a new list")
+            .Given(ProviderStates.CreateListThrowsException)
+            .WithRequest(HttpMethod.Post, "/lists")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                // Intentionally not using a type matcher here so that this value is always sent
+                description = StandardList.Description
+            })
+            .WillRespond()
+            .WithStatus(HttpStatusCode.InternalServerError)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                type = "errors/InternalServerError",
+                title = "Internal Server Error",
+                status = (int)HttpStatusCode.InternalServerError,
+                detail = "An internal server error occurred during the processing of the request",
+                instance = Match.Type(new Uri("https://packed.api/lists")),
+                errorId = Match.Type(ErrorGuid),
+                timestamp = Match.Type(ErrorTime)
+            });
+
+        await _pactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act/Assert
+            await Assert.ThrowsExceptionAsync<PackedApiClientException>(async () =>
+                await client.CreateNewListAsync(StandardList.Description));
+        });
+    }
 
     #endregion ADD LIST
 }

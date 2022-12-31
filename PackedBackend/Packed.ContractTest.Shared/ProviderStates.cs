@@ -22,5 +22,10 @@ namespace Packed.ContractTest.Shared
         /// General state where request is incorrectly formatted
         /// </summary>
         public const string RequestIsIncorrectlyFormatted = "request is incorrectly formatted";
+
+        /// <summary>
+        /// State where creating a list throws an exception
+        /// </summary>
+        public const string CreateListThrowsException = "creating a list throws an exception";
     }
 }

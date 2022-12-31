@@ -36,6 +36,10 @@ public class ProviderStateMiddleware
                 // This state is recognized, but we don't actually need to do any setup to get it to work
                 ProviderStates.RequestIsIncorrectlyFormatted.ToLower(),
                 (_, _) => { }
+            },
+            {
+                ProviderStates.CreateListThrowsException,
+                EnsureCreateListThrowsException
             }
         };
 
@@ -140,6 +144,21 @@ public class ProviderStateMiddleware
                 new Exception(string.Empty,
                     new PostgresException(string.Empty, string.Empty, string.Empty,
                         PostgresErrorCodes.UniqueViolation)));
+    }
+
+    /// <summary>
+    /// Ensure that any attempt to create a list throws an exception which represents a failure other than
+    /// duplicating a list
+    /// </summary>
+    /// <param name="parameters">Parameters</param>
+    /// <param name="listRepositoryMock">List repository mock</param>
+    private static void EnsureCreateListThrowsException(IDictionary<string, string> parameters,
+        Mock<IListRepository> listRepositoryMock)
+    {
+        listRepositoryMock
+            .Setup(r => r.Create(It.IsAny<List>()))
+            .Throws(() =>
+                new Exception());
     }
 
     #endregion PROVIDER STATE SETUPS
