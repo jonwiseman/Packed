@@ -10,8 +10,10 @@ namespace Packed.ContractTest.Shared
     /// <summary>
     /// Shared data for contract tests
     /// </summary>
-    public static class ContractData
+    public static class ContractTestData
     {
+        #region MODEL DATA
+
         /// <summary>
         /// Placement for use in contract tests
         /// </summary>
@@ -73,6 +75,10 @@ namespace Packed.ContractTest.Shared
             }
         };
 
+        #endregion MODEL DATA
+
+        #region ERRORS
+
         /// <summary>
         /// GUID to use when generating pacts
         /// </summary>
@@ -85,6 +91,8 @@ namespace Packed.ContractTest.Shared
         /// <summary>
         /// Time at which an error occurred
         /// </summary>
-        public static readonly string ErrorTime = "2022-12-09T:17:55:55:555Z";
+        public static readonly string ErrorTime = "2022-12-31T18:05:10.3047738Z";
+
+        #endregion ERRORS
     }
 }

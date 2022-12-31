@@ -17,5 +17,10 @@ namespace Packed.ContractTest.Shared
         /// State where a list with the same description as one which is going to be added already exists
         /// </summary>
         public const string DuplicateList = "there is a list with the same description";
+
+        /// <summary>
+        /// General state where request is incorrectly formatted
+        /// </summary>
+        public const string RequestIsIncorrectlyFormatted = "request is incorrectly formatted";
     }
 }

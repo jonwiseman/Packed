@@ -31,6 +31,11 @@ public class ProviderStateMiddleware
             {
                 ProviderStates.DuplicateList.ToLower(),
                 EnsureDuplicateListExists
+            },
+            {
+                // This state is recognized, but we don't actually need to do any setup to get it to work
+                ProviderStates.RequestIsIncorrectlyFormatted.ToLower(),
+                (_, _) => { }
             }
         };
 
@@ -116,7 +121,7 @@ public class ProviderStateMiddleware
             .Setup(r => r.GetAllListsAsync())
             .ReturnsAsync(new List<List>
             {
-                ContractData.StandardList
+                ContractTestData.StandardList
             });
     }
 

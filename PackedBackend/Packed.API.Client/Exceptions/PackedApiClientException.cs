@@ -1,7 +1,7 @@
 // Date Created: 2022/12/27
 // Created by: JSW
 
-using Packed.API.Core.DTOs;
+using Packed.API.Client.Responses;
 
 namespace Packed.API.Client.Exceptions;
 

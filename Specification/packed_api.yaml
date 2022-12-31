@@ -692,7 +692,7 @@ components:
           type: string
           format: date-time
           description: The time at which the error occurred
-          example: "2022-12-09T:17:55:55:555Z"
+          example: "2022-12-31T18:05:10.3047738Z"
   responses:
     BadRequest:
       description: The client made an improperly formatted request
@@ -707,7 +707,7 @@ components:
             detail: "Client made an improperly formatted request"
             instance: "https://api.packed.io/lists"
             errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
-            timestamp: "2022-07-17T:17:55:59:130Z"
+            timestamp: "2022-12-31T18:05:10.3047738Z"
     Unauthorized:
       description: Client could not be identified
       content:
@@ -721,7 +721,7 @@ components:
             detail: "Client could not be identifier. Re-authenticating may fix this error"
             instance: "https://api.packed.io/lists"
             errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
-            timestamp: "2022-07-17T:17:55:59:130Z"
+            timestamp: "2022-12-31T18:05:10.3047738Z"
     NotFound:
       description: The requested resource was not found
       content:
@@ -735,7 +735,7 @@ components:
             detail: "The requested resource could not be located"
             instance: "https://api.packed.io/lists/1"
             errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
-            timestamp: "2022-07-17T:17:55:59:130Z"
+            timestamp: "2022-12-31T18:05:10.3047738Z"
     Conflict:
       description: An attempt to add or update an resource conflicts with another resource on the server
       content:
@@ -749,7 +749,7 @@ components:
             detail: "The provided resource conflicts with an existing resource on the server"
             instance: "https://api.packed.io/lists/1"
             errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
-            timestamp: "2022-07-17T:17:55:59:130Z"
+            timestamp: "2022-12-31T18:05:10.3047738Z"
     InternalServerError:
       description: The server encountered an error while processing the request
       content:
@@ -763,7 +763,7 @@ components:
             detail: "An internal server error occurred during the processing of the request"
             instance: "https://api.packed.io/lists"
             errorId: "45001b4d-c4dd-4598-8548-260dc89f3088"
-            timestamp: "2022-07-17T:17:55:59:130Z"
+            timestamp: "2022-12-31T18:05:10.3047738Z"
   securitySchemes:
     ApiKey:
       type: apiKey

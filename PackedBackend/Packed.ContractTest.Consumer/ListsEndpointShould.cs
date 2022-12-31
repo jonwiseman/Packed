@@ -3,12 +3,13 @@
 
 using System.Net;
 using Packed.API.Client;
+using Packed.API.Client.Exceptions;
 using Packed.API.Client.Responses;
 using Packed.API.Core.Exceptions;
 using Packed.ContractTest.Shared;
 using PactNet;
 using PactNet.Matchers;
-using static Packed.ContractTest.Shared.ContractData;
+using static Packed.ContractTest.Shared.ContractTestData;
 
 namespace Packed.ContractTest.Consumer;
 
@@ -168,7 +169,49 @@ public class ListsEndpointShould
         });
     }
 
-    // TODO: add test for bad request
+    /// <summary>
+    /// Test to ensure that attempting to create a list with an incorrect request body will
+    /// return an HTTP 400 Bad Request with expected body format. In this test case, a JSON body is provided
+    /// but it is incorrect
+    /// </summary>
+    [TestMethod]
+    public async Task ReturnBadRequestOnCreateListWhenBodyIncorrect()
+    {
+        // Arrange
+        _pactBuilder
+            .UponReceiving("A POST request to add a new list")
+            .Given(ProviderStates.RequestIsIncorrectlyFormatted)
+            .WithRequest(HttpMethod.Post, "/lists")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                description = string.Empty
+            })
+            .WillRespond()
+            .WithStatus(HttpStatusCode.BadRequest)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                type = "errors/BadRequest",
+                title = "Bad Request",
+                status = (int)HttpStatusCode.BadRequest,
+                detail = Match.Type("Client made an improperly formatted request"),
+                instance = Match.Type(new Uri("https://packed.api/lists")),
+                errorId = Match.Type(ErrorGuid),
+                timestamp = Match.Type(ErrorTime)
+            });
+
+        await _pactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act/Assert
+            await Assert.ThrowsExceptionAsync<PackedApiClientException>(async () =>
+                await client.CreateNewListAsync(string.Empty));
+        });
+    }
 
     /// <summary>
     /// Test to ensure that attempting to create a duplicate list will return an HTTP 409 Conflict
@@ -192,9 +235,9 @@ public class ListsEndpointShould
             .WithHeader("Content-Type", "application/json")
             .WithJsonBody(new
             {
-                type = Match.Type("errors/Conflict"),
-                title = Match.Type("Conflict"),
-                status = Match.Type((int)HttpStatusCode.Conflict),
+                type = "errors/Conflict",
+                title = "Resource Conflict",
+                status = (int)HttpStatusCode.Conflict,
                 detail = Match.Type("A list with the same description already exists"),
                 instance = Match.Type(new Uri("https://packed.api/lists")),
                 errorId = Match.Type(ErrorGuid),
@@ -212,6 +255,8 @@ public class ListsEndpointShould
                 await client.CreateNewListAsync(StandardList.Description));
         });
     }
+
+    // TODO: add HTTP 500 response
 
     #endregion ADD LIST
 }
