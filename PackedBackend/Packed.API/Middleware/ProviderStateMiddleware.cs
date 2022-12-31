@@ -44,6 +44,10 @@ public class ProviderStateMiddleware
             {
                 ProviderStates.CreateListThrowsException,
                 EnsureCreateListThrowsException
+            },
+            {
+                ProviderStates.SpecificListExists,
+                EnsureSpecificListExists
             }
         };
 
@@ -176,6 +180,19 @@ public class ProviderStateMiddleware
             .Setup(r => r.Create(It.IsAny<List>()))
             .Throws(() =>
                 new Exception());
+    }
+
+    /// <summary>
+    /// Handle state that require there to be one specific list which exists
+    /// </summary>
+    /// <param name="parameters">Parameters</param>
+    /// <param name="listRepositoryMock">List repository mock</param>
+    private static void EnsureSpecificListExists(IDictionary<string, string> parameters,
+        Mock<IListRepository> listRepositoryMock)
+    {
+        listRepositoryMock
+            .Setup(r => r.GetListByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync(ContractTestData.StandardList);
     }
 
     #endregion PROVIDER STATE SETUPS

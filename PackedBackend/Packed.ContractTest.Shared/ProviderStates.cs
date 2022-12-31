@@ -32,5 +32,10 @@ namespace Packed.ContractTest.Shared
         /// State where creating a list throws an exception
         /// </summary>
         public const string CreateListThrowsException = "creating a list throws an exception";
+
+        /// <summary>
+        /// State where one specific list exists
+        /// </summary>
+        public const string SpecificListExists = "a specific list exists";
     }
 }

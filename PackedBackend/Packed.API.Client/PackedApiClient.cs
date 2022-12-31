@@ -102,7 +102,10 @@ public class PackedApiClient : IPackedApiClient
     public async Task<PackedList> GetListByIdAsync(int listId)
     {
         // Create request message
-        var request = new HttpRequestMessage(HttpMethod.Get, $"lists/{listId}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"lists/{listId}")
+        {
+            Headers = { { "Accept", "application/json" } }
+        };
 
         // Initialize a token source
         using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));

@@ -133,6 +133,7 @@ public class ListsEndpointShould
             .UponReceiving("A GET request to retrieve all lists")
             .Given(ProviderStates.GetListsThrowsException)
             .WithRequest(HttpMethod.Get, "/lists")
+            .WithHeader("Accept", "application/json")
             .WillRespond()
             .WithStatus(HttpStatusCode.InternalServerError)
             .WithHeader("Content-Type", "application/json")
@@ -176,7 +177,7 @@ public class ListsEndpointShould
             .WithHeader("Content-Type", "application/json; charset=utf-8")
             .WithJsonBody(new
             {
-                description = new TypeMatcher(StandardList.Description)
+                description = StandardList.Description
             })
             .WillRespond()
             .WithStatus(HttpStatusCode.Created)
@@ -265,7 +266,6 @@ public class ListsEndpointShould
             .WithHeader("Content-Type", "application/json; charset=utf-8")
             .WithJsonBody(new
             {
-                // Intentionally not using a type matcher here so that this value is always sent
                 description = StandardList.Description
             })
             .WillRespond()
@@ -339,4 +339,77 @@ public class ListsEndpointShould
     }
 
     #endregion ADD LIST
+
+    #region GET LIST
+
+    /// <summary>
+    /// Test to ensure that a specific list can be retrieved
+    /// </summary>
+    [TestMethod]
+    public async Task GetSpecificList()
+    {
+        // Arrange
+        _pactBuilder
+            .UponReceiving("A GET request for a specific list")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Get, $"/lists/{StandardList.Id}")
+            .WithHeader("Accept", "application/json")
+            .WillRespond()
+            .WithStatus(HttpStatusCode.OK)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                listId = new TypeMatcher(StandardList.Id),
+                description = new TypeMatcher(StandardList.Description),
+                items = new MinMaxTypeMatcher(new
+                {
+                    itemId = new TypeMatcher(StandardItem.Id),
+                    name = new TypeMatcher(StandardItem.Name),
+                    quantity = new TypeMatcher(StandardItem.Quantity),
+                    placements = new MinMaxTypeMatcher(new
+                    {
+                        placementId = new TypeMatcher(StandardPlacement.Id),
+                        containerId = new TypeMatcher(StandardPlacement.ContainerId)
+                    }, 1)
+                }, 1),
+                containers = new MinMaxTypeMatcher(new
+                {
+                    containerId = new TypeMatcher(StandardContainer.Id),
+                    name = new TypeMatcher(StandardContainer.Name)
+                }, 1)
+            });
+
+        await _pactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            var list = await client.GetListByIdAsync(StandardList.Id);
+
+            // Assert
+            Assert.IsNotNull(list);
+            Assert.AreEqual(StandardList.Id, list.Id);
+            Assert.AreEqual(StandardList.Description, list.Description);
+
+            // Ensure item deserialized correctly
+            var item = list.Items.Single();
+            Assert.AreEqual(StandardItem.Id, item.Id);
+            Assert.AreEqual(StandardItem.Name, item.Name);
+            Assert.AreEqual(StandardItem.Quantity, item.Quantity);
+
+            // Ensure placement deserialized correctly
+            var placement = item.Placements.Single();
+            Assert.AreEqual(StandardPlacement.Id, placement.Id);
+            Assert.AreEqual(StandardPlacement.ContainerId, placement.ContainerId);
+
+            // Ensure container deserialized correctly
+            var container = list.Containers.Single();
+            Assert.AreEqual(StandardContainer.Id, container.Id);
+            Assert.AreEqual(StandardContainer.Name, container.Name);
+        });
+    }
+
+    #endregion GET LIST
 }
