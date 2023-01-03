@@ -18,7 +18,7 @@ public abstract class ApiErrorFactoryBase
     /// <returns>
     /// An appropriately initialized error object to be returned to the client
     /// </returns>
-    protected abstract PackedApiError CreateApiError(HttpStatusCode statusCode);
+    protected abstract ApiError CreateApiError(HttpStatusCode statusCode);
 
     /// <summary>
     /// Create an API error object
@@ -29,7 +29,7 @@ public abstract class ApiErrorFactoryBase
     /// <returns>
     /// A completed error object to be returned to the client
     /// </returns>
-    public PackedApiError GetApiError(HttpStatusCode statusCode, string detail, string requestPath)
+    public ApiError GetApiError(HttpStatusCode statusCode, string detail, string requestPath)
     {
         // Allow factory method to create most properties
         var errorDto = CreateApiError(statusCode);

@@ -8,12 +8,14 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.10" />
+        <PackageReference Include="Moq" Version="4.18.3" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Packed.API.Core\Packed.API.Core.csproj" />
+      <ProjectReference Include="..\Packed.ContractTest.Shared\Packed.ContractTest.Shared.csproj" />
       <ProjectReference Include="..\Packed.Data.Core\Packed.Data.Core.csproj" />
       <ProjectReference Include="..\Packed.Data.EntityFramework\Packed.Data.EntityFramework.csproj" />
     </ItemGroup>

@@ -19,29 +19,29 @@ public class ApiErrorFactory : ApiErrorFactoryBase
     /// <returns>
     /// An appropriately initialized error object to be returned to the client
     /// </returns>
-    protected override PackedApiError CreateApiError(HttpStatusCode statusCode)
+    protected override ApiError CreateApiError(HttpStatusCode statusCode)
     {
         return statusCode switch
         {
-            HttpStatusCode.InternalServerError => new PackedApiError
+            HttpStatusCode.InternalServerError => new ApiError
             {
                 Type = "errors/InternalServerError",
                 Title = "Internal Server Error",
                 StatusCode = (int)HttpStatusCode.InternalServerError
             },
-            HttpStatusCode.NotFound => new PackedApiError
+            HttpStatusCode.NotFound => new ApiError
             {
                 Type = "errors/NotFound",
                 Title = "Resource Not Found",
                 StatusCode = (int)HttpStatusCode.NotFound
             },
-            HttpStatusCode.Conflict => new PackedApiError
+            HttpStatusCode.Conflict => new ApiError
             {
                 Type = "errors/Conflict",
                 Title = "Resource Conflict",
                 StatusCode = (int)HttpStatusCode.Conflict
             },
-            HttpStatusCode.BadRequest => new PackedApiError
+            HttpStatusCode.BadRequest => new ApiError
             {
                 Type = "errors/BadRequest",
                 Title = "Bad Request",

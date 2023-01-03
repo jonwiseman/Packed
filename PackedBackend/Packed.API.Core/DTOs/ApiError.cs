@@ -1,4 +1,4 @@
-// Date Created: 2022/12/13
+// Date Created: 2023/01/03
 // Created by: JSW
 
 using System;
@@ -9,14 +9,14 @@ namespace Packed.API.Core.DTOs
     /// <summary>
     /// Standard DTO for all API errors
     /// </summary>
-    public class PackedApiError
+    public class ApiError
     {
         #region CONSTRUCTOR
 
         /// <summary>
         /// Default constructor.  Initialize time and set a random error GUID
         /// </summary>
-        public PackedApiError()
+        public ApiError()
         {
             ErrorId = Guid.NewGuid();
             TimeStamp = DateTime.UtcNow;

@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <!-- Want things to build to a predictable directory so they can be used in actions -->
+        <OutDir>$(MSBuildThisFileDirectory)\Builds\</OutDir>
+    </PropertyGroup>
+</Project>
