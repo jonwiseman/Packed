@@ -1,4 +1,4 @@
-// Date Created: 2022/12/28
+// Date Created: 2023/01/03
 // Created by: JSW
 
 using System.Net;
@@ -28,7 +28,7 @@ public class ProviderStateMiddleware
                 EnsureOneListExists
             },
             {
-                ProviderStates.SpecificListExists,
+                ProviderStates.SpecificListExists.ToLower(),
                 EnsureSpecificListExists
             }
         };
@@ -93,7 +93,7 @@ public class ProviderStateMiddleware
             // If we do know how to set up the supplied state, do so
             setupAction.Invoke(providerState.Params, listRepositoryMock);
 
-            // Write back an empty HTTP 200 OK
+            // Write back an HTTP 200 OK
             context.Response.StatusCode = (int)HttpStatusCode.OK;
             await context.Response.WriteAsync("Completed setup");
         }

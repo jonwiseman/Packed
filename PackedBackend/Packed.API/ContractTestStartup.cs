@@ -1,4 +1,4 @@
-// Date Created: 2022/12/28
+// Date Created: 2023/01/03
 // Created by: JSW
 
 using Microsoft.AspNetCore.Mvc;
@@ -53,7 +53,6 @@ public class ContractTestStartup
         services.AddSingleton(_ => unitOfWorkMock.Object);
 
         // Place the actual mocks into the services container so they can be configured by provider state middleware
-        services.AddSingleton(_ => unitOfWorkMock);
         services.AddSingleton(_ => listRepositoryMock);
 
         // Add data services
