@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Packed.API.Client.Exceptions;
 using Packed.API.Client.Responses;
-using Packed.API.Core.DTOs;
 using Packed.API.Core.Exceptions;
 using Packed.API.Extensions;
 
@@ -192,7 +191,7 @@ public class PackedApiClient : IPackedApiClient
     /// Update an existing list
     /// </summary>
     /// <param name="listId">ID of list to update</param>
-    /// <param name="updatedList">Updated list</param>
+    /// <param name="updatedDescription">Updated list description</param>
     /// <returns>
     /// A representation of the updated list
     /// </returns>
@@ -201,12 +200,14 @@ public class PackedApiClient : IPackedApiClient
     /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    public async Task<PackedList> UpdateListAsync(int listId, ListDto updatedList)
+    public async Task<PackedList> UpdateListAsync(int listId, string updatedDescription)
     {
         // Create request message with body
         var request = new HttpRequestMessage(HttpMethod.Put, $"lists/{listId}")
         {
-            Content = new StringContent(JsonConvert.SerializeObject(updatedList))
+            Content = new StringContent(JsonConvert.SerializeObject(new { description = updatedDescription },
+                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }),
+                Encoding.UTF8, "application/json")
         };
 
         // Initialize a token source
@@ -230,7 +231,7 @@ public class PackedApiClient : IPackedApiClient
 
             // List with same description already exists
             HttpStatusCode.Conflict =>
-                throw new DuplicateListException($"List with description {updatedList.Description} already exists"),
+                throw new DuplicateListException($"List with description {updatedDescription} already exists"),
 
             // Errors documented in OpenAPI specification
             HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.InternalServerError =>

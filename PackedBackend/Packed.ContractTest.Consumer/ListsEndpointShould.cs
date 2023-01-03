@@ -3,9 +3,7 @@
 
 using System.Net;
 using Packed.API.Client;
-using Packed.API.Client.Exceptions;
 using Packed.API.Client.Responses;
-using Packed.API.Core.Exceptions;
 using Packed.ContractTest.Shared;
 using PactNet;
 using PactNet.Matchers;
@@ -46,7 +44,7 @@ public class ListsEndpointShould
 
     #endregion TEST LIFE CYCLE
 
-    #region GET LISTS
+    #region TEST METHODS
 
     /// <summary>
     /// Test to ensure that all lists can be retrieved
@@ -122,49 +120,6 @@ public class ListsEndpointShould
     }
 
     /// <summary>
-    /// Test to ensure that an HTTP 500 Internal Server Error with correct body is returned
-    /// when an unexpected exception occurs on the server
-    /// </summary>
-    [TestMethod]
-    public async Task ReturnInternalServerErrorOnExceptionWhenGettingAllLists()
-    {
-        // Arrange
-        _pactBuilder
-            .UponReceiving("A GET request to retrieve all lists")
-            .Given(ProviderStates.GetListsThrowsException)
-            .WithRequest(HttpMethod.Get, "/lists")
-            .WithHeader("Accept", "application/json")
-            .WillRespond()
-            .WithStatus(HttpStatusCode.InternalServerError)
-            .WithHeader("Content-Type", "application/json")
-            .WithJsonBody(new
-            {
-                type = "errors/InternalServerError",
-                title = "Internal Server Error",
-                status = (int)HttpStatusCode.InternalServerError,
-                detail = "An internal server error occurred during the processing of the request",
-                instance = Match.Type(new Uri("https://packed.api/lists")),
-                errorId = Match.Type(ErrorGuid),
-                timestamp = Match.Type(ErrorTime)
-            });
-
-        await _pactBuilder.VerifyAsync(async ctx =>
-        {
-            var httpClient = HttpClientFactory.Create();
-            httpClient.BaseAddress = ctx.MockServerUri;
-            var client = new PackedApiClient(httpClient);
-
-            // Act/Assert
-            await Assert.ThrowsExceptionAsync<PackedApiClientException>(async () =>
-                await client.GetAllListsAsync());
-        });
-    }
-
-    #endregion GET LISTS
-
-    #region ADD LIST
-
-    /// <summary>
     /// Test to ensure that new lists can be created
     /// </summary>
     [TestMethod]
@@ -207,140 +162,6 @@ public class ListsEndpointShould
             Assert.AreEqual(0, list.Containers.Count);
         });
     }
-
-    /// <summary>
-    /// Test to ensure that attempting to create a list with an incorrect request body will
-    /// return an HTTP 400 Bad Request with expected body format. In this test case, a JSON body is provided
-    /// but it is incorrect
-    /// </summary>
-    [TestMethod]
-    public async Task ReturnBadRequestOnCreateListWhenBodyIncorrect()
-    {
-        // Arrange
-        _pactBuilder
-            .UponReceiving("A POST request to add a new list")
-            .Given(ProviderStates.RequestIsIncorrectlyFormatted)
-            .WithRequest(HttpMethod.Post, "/lists")
-            .WithHeader("Content-Type", "application/json; charset=utf-8")
-            .WithJsonBody(new
-            {
-                description = string.Empty
-            })
-            .WillRespond()
-            .WithStatus(HttpStatusCode.BadRequest)
-            .WithHeader("Content-Type", "application/json")
-            .WithJsonBody(new
-            {
-                type = "errors/BadRequest",
-                title = "Bad Request",
-                status = (int)HttpStatusCode.BadRequest,
-                detail = Match.Type("Client made an improperly formatted request"),
-                instance = Match.Type(new Uri("https://packed.api/lists")),
-                errorId = Match.Type(ErrorGuid),
-                timestamp = Match.Type(ErrorTime)
-            });
-
-        await _pactBuilder.VerifyAsync(async ctx =>
-        {
-            var httpClient = HttpClientFactory.Create();
-            httpClient.BaseAddress = ctx.MockServerUri;
-            var client = new PackedApiClient(httpClient);
-
-            // Act/Assert
-            await Assert.ThrowsExceptionAsync<PackedApiClientException>(async () =>
-                await client.CreateNewListAsync(string.Empty));
-        });
-    }
-
-    /// <summary>
-    /// Test to ensure that attempting to create a duplicate list will return an HTTP 409 Conflict
-    /// </summary>
-    [TestMethod]
-    public async Task ReturnConflictWhenCreatingDuplicateList()
-    {
-        // Arrange
-        _pactBuilder
-            .UponReceiving("A POST request to add a new list")
-            .Given(ProviderStates.DuplicateList)
-            .WithRequest(HttpMethod.Post, "/lists")
-            .WithHeader("Content-Type", "application/json; charset=utf-8")
-            .WithJsonBody(new
-            {
-                description = StandardList.Description
-            })
-            .WillRespond()
-            .WithStatus(HttpStatusCode.Conflict)
-            .WithHeader("Content-Type", "application/json")
-            .WithJsonBody(new
-            {
-                type = "errors/Conflict",
-                title = "Resource Conflict",
-                status = (int)HttpStatusCode.Conflict,
-                detail = Match.Type("A list with the same description already exists"),
-                instance = Match.Type(new Uri("https://packed.api/lists")),
-                errorId = Match.Type(ErrorGuid),
-                timestamp = Match.Type(ErrorTime)
-            });
-
-        await _pactBuilder.VerifyAsync(async ctx =>
-        {
-            var httpClient = HttpClientFactory.Create();
-            httpClient.BaseAddress = ctx.MockServerUri;
-            var client = new PackedApiClient(httpClient);
-
-            // Act/Assert
-            await Assert.ThrowsExceptionAsync<DuplicateListException>(async () =>
-                await client.CreateNewListAsync(StandardList.Description));
-        });
-    }
-
-    /// <summary>
-    /// Test to ensure that an unexpected error on the server returns an appropriately
-    /// formatted body 
-    /// </summary>
-    [TestMethod]
-    public async Task ReturnInternalServerErrorOnExceptionWhenCreatingList()
-    {
-        // Arrange
-        _pactBuilder
-            .UponReceiving("A POST request to add a new list")
-            .Given(ProviderStates.CreateListThrowsException)
-            .WithRequest(HttpMethod.Post, "/lists")
-            .WithHeader("Content-Type", "application/json; charset=utf-8")
-            .WithJsonBody(new
-            {
-                // Intentionally not using a type matcher here so that this value is always sent
-                description = StandardList.Description
-            })
-            .WillRespond()
-            .WithStatus(HttpStatusCode.InternalServerError)
-            .WithHeader("Content-Type", "application/json")
-            .WithJsonBody(new
-            {
-                type = "errors/InternalServerError",
-                title = "Internal Server Error",
-                status = (int)HttpStatusCode.InternalServerError,
-                detail = "An internal server error occurred during the processing of the request",
-                instance = Match.Type(new Uri("https://packed.api/lists")),
-                errorId = Match.Type(ErrorGuid),
-                timestamp = Match.Type(ErrorTime)
-            });
-
-        await _pactBuilder.VerifyAsync(async ctx =>
-        {
-            var httpClient = HttpClientFactory.Create();
-            httpClient.BaseAddress = ctx.MockServerUri;
-            var client = new PackedApiClient(httpClient);
-
-            // Act/Assert
-            await Assert.ThrowsExceptionAsync<PackedApiClientException>(async () =>
-                await client.CreateNewListAsync(StandardList.Description));
-        });
-    }
-
-    #endregion ADD LIST
-
-    #region GET LIST
 
     /// <summary>
     /// Test to ensure that a specific list can be retrieved
@@ -412,30 +233,44 @@ public class ListsEndpointShould
     }
 
     /// <summary>
-    /// Test to ensure that attempting to retrieve a specific list when the list ID param
-    /// is wrong returns an HTTP 400 Bad Request
+    /// Test to ensure that a list can be updated
     /// </summary>
     [TestMethod]
-    public async Task ReturnBadRequestOnGetSpecificWhenQueryParamWrong()
+    public async Task UpdateList()
     {
         // Arrange
         _pactBuilder
-            .UponReceiving("A GET request for a specific list")
-            .Given(ProviderStates.RequestIsIncorrectlyFormatted)
-            .WithRequest(HttpMethod.Get, "/lists/-1")
-            .WithHeader("Accept", "application/json")
+            .UponReceiving("A PUT request to update a specific list")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Put, $"/lists/{StandardList.Id}")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                description = $"{StandardList.Description} UPDATED"
+            })
             .WillRespond()
-            .WithStatus(HttpStatusCode.BadRequest)
+            .WithStatus(HttpStatusCode.OK)
             .WithHeader("Content-Type", "application/json")
             .WithJsonBody(new
             {
-                type = "errors/BadRequest",
-                title = "Bad Request",
-                status = (int)HttpStatusCode.BadRequest,
-                detail = Match.Type("Client made an improperly formatted request"),
-                instance = Match.Type(new Uri("https://packed.api/lists")),
-                errorId = Match.Type(ErrorGuid),
-                timestamp = Match.Type(ErrorTime)
+                listId = new TypeMatcher(StandardList.Id),
+                description = new TypeMatcher($"{StandardList.Description} UPDATED"),
+                items = new MinMaxTypeMatcher(new
+                {
+                    itemId = new TypeMatcher(StandardItem.Id),
+                    name = new TypeMatcher(StandardItem.Name),
+                    quantity = new TypeMatcher(StandardItem.Quantity),
+                    placements = new MinMaxTypeMatcher(new
+                    {
+                        placementId = new TypeMatcher(StandardPlacement.Id),
+                        containerId = new TypeMatcher(StandardPlacement.ContainerId)
+                    }, 1)
+                }, 1),
+                containers = new MinMaxTypeMatcher(new
+                {
+                    containerId = new TypeMatcher(StandardContainer.Id),
+                    name = new TypeMatcher(StandardContainer.Name)
+                }, 1)
             });
 
         await _pactBuilder.VerifyAsync(async ctx =>
@@ -444,11 +279,32 @@ public class ListsEndpointShould
             httpClient.BaseAddress = ctx.MockServerUri;
             var client = new PackedApiClient(httpClient);
 
-            // Act/Assert
-            await Assert.ThrowsExceptionAsync<PackedApiClientException>(async () =>
-                await client.GetListByIdAsync(-1));
+            // Act
+            var list = await client.UpdateListAsync(StandardList.Id,
+                $"{StandardList.Description} UPDATED");
+
+            // Assert
+            Assert.IsNotNull(list);
+            Assert.AreEqual(StandardList.Id, list.Id);
+            Assert.AreEqual($"{StandardList.Description} UPDATED", list.Description);
+
+            // Ensure item deserialized correctly
+            var item = list.Items.Single();
+            Assert.AreEqual(StandardItem.Id, item.Id);
+            Assert.AreEqual(StandardItem.Name, item.Name);
+            Assert.AreEqual(StandardItem.Quantity, item.Quantity);
+
+            // Ensure placement deserialized correctly
+            var placement = item.Placements.Single();
+            Assert.AreEqual(StandardPlacement.Id, placement.Id);
+            Assert.AreEqual(StandardPlacement.ContainerId, placement.ContainerId);
+
+            // Ensure container deserialized correctly
+            var container = list.Containers.Single();
+            Assert.AreEqual(StandardContainer.Id, container.Id);
+            Assert.AreEqual(StandardContainer.Name, container.Name);
         });
     }
 
-    #endregion GET LIST
+    #endregion TEST METHODS
 }

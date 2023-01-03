@@ -4,7 +4,6 @@
 using Newtonsoft.Json;
 using Packed.API.Client.Exceptions;
 using Packed.API.Client.Responses;
-using Packed.API.Core.DTOs;
 using Packed.API.Core.Exceptions;
 
 namespace Packed.API.Client;
@@ -57,7 +56,7 @@ public interface IPackedApiClient
     /// Update an existing list
     /// </summary>
     /// <param name="listId">ID of list to update</param>
-    /// <param name="updatedList">Updated list</param>
+    /// <param name="updatedDescription">Updated list description</param>
     /// <returns>
     /// A representation of the updated list
     /// </returns>
@@ -65,7 +64,7 @@ public interface IPackedApiClient
     /// <exception cref="DuplicateListException">List with given description already exists</exception>    /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     /// <exception cref="JsonSerializationException">Error deserializing response</exception>
-    Task<PackedList> UpdateListAsync(int listId, ListDto updatedList);
+    Task<PackedList> UpdateListAsync(int listId, string updatedDescription);
 
     /// <summary>
     /// Delete list with given ID

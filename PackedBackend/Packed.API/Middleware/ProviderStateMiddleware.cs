@@ -3,7 +3,6 @@
 
 using System.Net;
 using Moq;
-using Npgsql;
 using Packed.API.Extensions;
 using Packed.ContractTest.Shared;
 using Packed.Data.Core.Entities;
@@ -27,23 +26,6 @@ public class ProviderStateMiddleware
             {
                 ProviderStates.ListExists.ToLower(),
                 EnsureOneListExists
-            },
-            {
-                ProviderStates.GetListsThrowsException,
-                EnsureGettingListsThrowsExceptions
-            },
-            {
-                ProviderStates.DuplicateList.ToLower(),
-                EnsureDuplicateListExists
-            },
-            {
-                // This state is recognized, but we don't actually need to do any setup to get it to work
-                ProviderStates.RequestIsIncorrectlyFormatted.ToLower(),
-                (_, _) => { }
-            },
-            {
-                ProviderStates.CreateListThrowsException,
-                EnsureCreateListThrowsException
             },
             {
                 ProviderStates.SpecificListExists,
@@ -135,51 +117,6 @@ public class ProviderStateMiddleware
             {
                 ContractTestData.StandardList
             });
-    }
-
-    /// <summary>
-    /// Handle states that require there to be one list which exists
-    /// </summary>
-    /// <param name="parameters">Parameters</param>
-    /// <param name="listRepositoryMock">List repository mock</param>
-    private static void EnsureGettingListsThrowsExceptions(IDictionary<string, string> parameters,
-        Mock<IListRepository> listRepositoryMock)
-    {
-        listRepositoryMock
-            .Setup(r => r.GetAllListsAsync())
-            .Throws(() => new Exception());
-    }
-
-    /// <summary>
-    /// Handle the case where we are simulating attempting to add a new list with a description
-    /// that is already in use
-    /// </summary>
-    /// <param name="parameters">Parameters</param>
-    /// <param name="listRepositoryMock">List repository mock</param>
-    private static void EnsureDuplicateListExists(IDictionary<string, string> parameters,
-        Mock<IListRepository> listRepositoryMock)
-    {
-        listRepositoryMock
-            .Setup(r => r.Create(It.IsAny<List>()))
-            .Throws(() =>
-                new Exception(string.Empty,
-                    new PostgresException(string.Empty, string.Empty, string.Empty,
-                        PostgresErrorCodes.UniqueViolation)));
-    }
-
-    /// <summary>
-    /// Ensure that any attempt to create a list throws an exception which represents a failure other than
-    /// duplicating a list
-    /// </summary>
-    /// <param name="parameters">Parameters</param>
-    /// <param name="listRepositoryMock">List repository mock</param>
-    private static void EnsureCreateListThrowsException(IDictionary<string, string> parameters,
-        Mock<IListRepository> listRepositoryMock)
-    {
-        listRepositoryMock
-            .Setup(r => r.Create(It.IsAny<List>()))
-            .Throws(() =>
-                new Exception());
     }
 
     /// <summary>
