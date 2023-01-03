@@ -306,5 +306,30 @@ public class ListsEndpointShould
         });
     }
 
+    /// <summary>
+    /// Test to ensure that a list can be deleted and an empty HTTP 204 is returned
+    /// </summary>
+    [TestMethod]
+    public async Task DeleteList()
+    {
+        // Arrange
+        _pactBuilder
+            .UponReceiving("A DELETE request for a specific list")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Delete, $"/lists/{StandardList.Id}")
+            .WillRespond()
+            .WithStatus(HttpStatusCode.NoContent);
+
+        await _pactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            await client.DeleteListAsync(StandardList.Id);
+        });
+    }
+
     #endregion TEST METHODS
 }
