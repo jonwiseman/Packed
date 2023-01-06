@@ -283,4 +283,53 @@ public class PackedApiClient : IPackedApiClient
     }
 
     #endregion LISTS
+
+    #region ITEMS
+
+    /// <summary>
+    /// Get all items for the given list
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <returns>
+    /// All items belonging to the specified list
+    /// </returns>
+    /// <exception cref="ListNotFoundException">The list could not be found</exception>
+    /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
+    /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
+    public async Task<IEnumerable<PackedItem>> GetItemsForListAsync(int listId)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Get, $"lists/{listId}/items")
+        {
+            Headers = { { "Accept", "application/json" } }
+        };
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        switch (response.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                return await stream.ReadAndDeserializeFromJson<List<PackedItem>>();
+            case HttpStatusCode.NotFound:
+                throw new ListNotFoundException($"List with ID {listId} could not be found");
+            case HttpStatusCode.BadRequest:
+            case HttpStatusCode.Unauthorized:
+            case HttpStatusCode.InternalServerError:
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>());
+            default:
+                throw new HttpRequestException(
+                    $"Response with unexpected status code returned from request to {request.RequestUri}");
+        }
+    }
+
+    #endregion ITEMS
 }

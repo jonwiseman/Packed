@@ -76,4 +76,20 @@ public interface IPackedApiClient
     Task DeleteListAsync(int listId);
 
     #endregion LISTS
+
+    #region ITEMS
+
+    /// <summary>
+    /// Get all items for the given list
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <returns>
+    /// All items belonging to the specified list
+    /// </returns>
+    /// <exception cref="ListNotFoundException">The list could not be found</exception>
+    /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
+    /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
+    Task<IEnumerable<PackedItem>> GetItemsForListAsync(int listId);
+
+    #endregion ITEMS
 }

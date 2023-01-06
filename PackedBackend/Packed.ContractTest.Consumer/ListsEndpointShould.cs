@@ -5,7 +5,6 @@ using System.Net;
 using Packed.API.Client;
 using Packed.API.Client.Responses;
 using Packed.ContractTest.Shared;
-using PactNet;
 using PactNet.Matchers;
 using static Packed.ContractTest.Shared.ContractTestData;
 
@@ -15,35 +14,8 @@ namespace Packed.ContractTest.Consumer;
 /// Class which defines contract tests for the /lists endpoint
 /// </summary>
 [TestClass]
-public class ListsEndpointShould
+public class ListsEndpointShould : ContractTestBase
 {
-    #region FIELDS
-
-    /// <summary>
-    /// Pact builder
-    /// </summary>
-    private IPactBuilderV3 _pactBuilder = null!;
-
-    #endregion FIELDS
-
-    #region TEST LIFE CYCLE
-
-    /// <summary>
-    /// Initialize Pact Builder
-    /// </summary>
-    [TestInitialize]
-    public void Initialize()
-    {
-        var pact = Pact.V3(ContractInfo.ConsumerName, ContractInfo.ProviderName, new PactConfig
-        {
-            PactDir = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}pacts"
-        });
-
-        _pactBuilder = pact.WithHttpInteractions();
-    }
-
-    #endregion TEST LIFE CYCLE
-
     #region TEST METHODS
 
     /// <summary>
@@ -53,7 +25,7 @@ public class ListsEndpointShould
     public async Task RetrieveAllLists()
     {
         // Arrange
-        _pactBuilder
+        PactBuilder
             .UponReceiving("A GET request to retrieve all lists")
             .Given(ProviderStates.ListExists)
             .WithRequest(HttpMethod.Get, "/lists")
@@ -83,7 +55,7 @@ public class ListsEndpointShould
                 }, 1)
             }, 1));
 
-        await _pactBuilder.VerifyAsync(async ctx =>
+        await PactBuilder.VerifyAsync(async ctx =>
         {
             var httpClient = HttpClientFactory.Create();
             httpClient.BaseAddress = ctx.MockServerUri;
@@ -126,7 +98,7 @@ public class ListsEndpointShould
     public async Task CreateNewList()
     {
         // Arrange
-        _pactBuilder
+        PactBuilder
             .UponReceiving("A POST request to add a new list")
             .WithRequest(HttpMethod.Post, "/lists")
             .WithHeader("Content-Type", "application/json; charset=utf-8")
@@ -145,7 +117,7 @@ public class ListsEndpointShould
                 containers = Array.Empty<PackedContainer>()
             });
 
-        await _pactBuilder.VerifyAsync(async ctx =>
+        await PactBuilder.VerifyAsync(async ctx =>
         {
             var httpClient = HttpClientFactory.Create();
             httpClient.BaseAddress = ctx.MockServerUri;
@@ -170,7 +142,7 @@ public class ListsEndpointShould
     public async Task GetSpecificList()
     {
         // Arrange
-        _pactBuilder
+        PactBuilder
             .UponReceiving("A GET request for a specific list")
             .Given(ProviderStates.SpecificListExists)
             .WithRequest(HttpMethod.Get, $"/lists/{StandardList.Id}")
@@ -200,7 +172,7 @@ public class ListsEndpointShould
                 }, 1)
             });
 
-        await _pactBuilder.VerifyAsync(async ctx =>
+        await PactBuilder.VerifyAsync(async ctx =>
         {
             var httpClient = HttpClientFactory.Create();
             httpClient.BaseAddress = ctx.MockServerUri;
@@ -239,7 +211,7 @@ public class ListsEndpointShould
     public async Task UpdateList()
     {
         // Arrange
-        _pactBuilder
+        PactBuilder
             .UponReceiving("A PUT request to update a specific list")
             .Given(ProviderStates.SpecificListExists)
             .WithRequest(HttpMethod.Put, $"/lists/{StandardList.Id}")
@@ -273,7 +245,7 @@ public class ListsEndpointShould
                 }, 1)
             });
 
-        await _pactBuilder.VerifyAsync(async ctx =>
+        await PactBuilder.VerifyAsync(async ctx =>
         {
             var httpClient = HttpClientFactory.Create();
             httpClient.BaseAddress = ctx.MockServerUri;
@@ -313,14 +285,14 @@ public class ListsEndpointShould
     public async Task DeleteList()
     {
         // Arrange
-        _pactBuilder
+        PactBuilder
             .UponReceiving("A DELETE request for a specific list")
             .Given(ProviderStates.SpecificListExists)
             .WithRequest(HttpMethod.Delete, $"/lists/{StandardList.Id}")
             .WillRespond()
             .WithStatus(HttpStatusCode.NoContent);
 
-        await _pactBuilder.VerifyAsync(async ctx =>
+        await PactBuilder.VerifyAsync(async ctx =>
         {
             var httpClient = HttpClientFactory.Create();
             httpClient.BaseAddress = ctx.MockServerUri;
