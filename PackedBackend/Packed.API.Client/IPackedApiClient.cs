@@ -106,5 +106,17 @@ public interface IPackedApiClient
     /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
     Task<(PackedItem, string)> CreateItemForList(int listId, string name, int quantity);
 
+    /// <summary>
+    /// Retrieve a specific item from the specified list
+    /// </summary>
+    /// <param name="listId">List to retrieve item from</param>
+    /// <param name="itemId">ID of item to retrieve</param>
+    /// <returns>
+    /// The specified item
+    /// </returns>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    Task<PackedItem> GetItemFromList(int listId, int itemId);
+
     #endregion ITEMS
 }

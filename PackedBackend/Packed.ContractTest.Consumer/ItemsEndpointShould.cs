@@ -117,5 +117,54 @@ public class ItemsEndpointShould : ContractTestBase
         });
     }
 
+    /// <summary>
+    /// Test to ensure that a specific item can be retrieved
+    /// </summary>
+    [TestMethod]
+    public async Task GetSpecificItem()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving(
+                $"A GET request to retrieve item with ID {StandardItem.Id} from list with ID {StandardList.Id}")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Get, $"/lists/{StandardList.Id}/items/{StandardItem.Id}")
+            .WithHeader("Accept", "application/json")
+            .WillRespond()
+            .WithStatus(HttpStatusCode.OK)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                itemId = new TypeMatcher(StandardItem.Id),
+                name = new TypeMatcher(StandardItem.Name),
+                quantity = new TypeMatcher(StandardItem.Quantity),
+                placements = new MinMaxTypeMatcher(new
+                {
+                    placementId = new TypeMatcher(StandardPlacement.Id),
+                    containerId = new TypeMatcher(StandardPlacement.ContainerId)
+                }, 1)
+            });
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            var item = await client.GetItemFromList(StandardList.Id, StandardItem.Id);
+
+            // Assert
+            Assert.AreEqual(StandardItem.Id, item.Id);
+            Assert.AreEqual(StandardItem.Name, item.Name);
+            Assert.AreEqual(StandardItem.Quantity, item.Quantity);
+
+            // Ensure placement deserialized correctly
+            var placement = item.Placements.Single();
+            Assert.AreEqual(StandardPlacement.Id, placement.Id);
+            Assert.AreEqual(StandardPlacement.ContainerId, placement.ContainerId);
+        });
+    }
+
     #endregion TEST METHODS
 }
