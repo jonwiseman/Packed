@@ -112,7 +112,7 @@ public class ListsEndpointShould : ContractTestBase
             .WithJsonBody(new
             {
                 listId = new TypeMatcher(StandardList.Id),
-                description = new TypeMatcher(StandardList.Description),
+                description = StandardList.Description,
                 items = Array.Empty<PackedItem>(),
                 containers = Array.Empty<PackedContainer>()
             });

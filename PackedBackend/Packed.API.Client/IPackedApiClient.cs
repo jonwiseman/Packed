@@ -91,5 +91,20 @@ public interface IPackedApiClient
     /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
     Task<IEnumerable<PackedItem>> GetItemsForListAsync(int listId);
 
+    /// <summary>
+    /// Create a new item in the specified list
+    /// </summary>
+    /// <param name="listId">ID of list to add item to</param>
+    /// <param name="name">Name of new item</param>
+    /// <param name="quantity">New item quantity</param>
+    /// <returns>
+    /// A representation of the new item and a link to the location of the new item
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List could not be found</exception>
+    /// <exception cref="DuplicateItemException">Item with same name already in list</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task<(PackedItem, string)> CreateItemForList(int listId, string name, int quantity);
+
     #endregion ITEMS
 }

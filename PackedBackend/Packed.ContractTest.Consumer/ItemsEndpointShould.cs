@@ -3,6 +3,7 @@
 
 using System.Net;
 using Packed.API.Client;
+using Packed.API.Client.Responses;
 using Packed.ContractTest.Shared;
 using PactNet.Matchers;
 using static Packed.ContractTest.Shared.ContractTestData;
@@ -67,6 +68,52 @@ public class ItemsEndpointShould : ContractTestBase
             var placement = item.Placements.Single();
             Assert.AreEqual(StandardPlacement.Id, placement.Id);
             Assert.AreEqual(StandardPlacement.ContainerId, placement.ContainerId);
+        });
+    }
+
+    /// <summary>
+    /// Test to ensure that a new item can be created
+    /// </summary>
+    [TestMethod]
+    public async Task CreateNewItem()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving("A POST request to add a new list")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Post, $"/lists/{StandardList.Id}/items")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                name = $"{StandardItem.Name} 2",
+                quantity = StandardItem.Quantity
+            })
+            .WillRespond()
+            .WithStatus(HttpStatusCode.Created)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                itemId = Match.Integer(StandardItem.Id),
+                name = $"{StandardItem.Name} 2",
+                quantity = StandardItem.Quantity,
+                placements = Array.Empty<PackedPlacement>()
+            });
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            var (item, _) = await client.CreateItemForList(StandardList.Id, $"{StandardItem.Name} 2",
+                StandardItem.Quantity);
+
+            // Assert
+            Assert.IsNotNull(item);
+            Assert.AreEqual(StandardItem.Id, item.Id);
+            Assert.AreEqual($"{StandardItem.Name} 2", item.Name);
+            Assert.AreEqual(StandardItem.Quantity, item.Quantity);
         });
     }
 

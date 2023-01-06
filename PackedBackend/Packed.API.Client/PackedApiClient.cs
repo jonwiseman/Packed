@@ -331,5 +331,66 @@ public class PackedApiClient : IPackedApiClient
         }
     }
 
+    /// <summary>
+    /// Create a new item in the specified list
+    /// </summary>
+    /// <param name="listId">ID of list to add item to</param>
+    /// <param name="name">Name of new item</param>
+    /// <param name="quantity">New item quantity</param>
+    /// <returns>
+    /// A representation of the new item and a link to the location of the new item
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List could not be found</exception>
+    /// <exception cref="DuplicateItemException">Item with same name already in list</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    public async Task<(PackedItem, string)> CreateItemForList(int listId, string name, int quantity)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Post, $"lists/{listId}/items")
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(new
+                    {
+                        name,
+                        quantity
+                    },
+                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }),
+                Encoding.UTF8, "application/json")
+        };
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        return response.StatusCode switch
+        {
+            // API should return representation of created item
+            HttpStatusCode.Created => (await stream.ReadAndDeserializeFromJson<PackedItem>(),
+                response.Headers.Location?.ToString() ?? string.Empty),
+
+            HttpStatusCode.NotFound =>
+                throw new ListNotFoundException($"List with ID {listId} not found"),
+
+            // Item with same name already exists
+            HttpStatusCode.Conflict =>
+                throw new DuplicateItemException($"Item with name {name} already exists"),
+
+            // Errors documented in OpenAPI specification
+            HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.InternalServerError =>
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>()),
+
+            // Errors which are not documented and that we can't get any information out of
+            _ => throw new HttpRequestException(
+                $"Response with unexpected status code returned from request to {request.RequestUri}")
+        };
+    }
+
     #endregion ITEMS
 }
