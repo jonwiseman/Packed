@@ -423,7 +423,6 @@ public class PackedApiClient : IPackedApiClient
         // Based on the status code, either attempt to deserialize the response stream or throw an exception
         return response.StatusCode switch
         {
-            // API should return representation of created item
             HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<PackedItem>(),
 
             // Errors documented in OpenAPI specification
