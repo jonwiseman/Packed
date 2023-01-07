@@ -143,4 +143,69 @@ public interface IPackedApiClient
     Task DeleteItemAsync(int listId, int itemId);
 
     #endregion ITEMS
+
+    #region CONTAINERS
+
+    /// <summary>
+    /// Get all containers belonging to a specific list
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <returns>
+    /// All existing containers
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List could not be found</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task<IEnumerable<PackedContainer>> GetContainersForListAsync(int listId);
+
+    /// <summary>
+    /// Create a new container
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="name">Container name</param>
+    /// <returns>
+    /// A representation of the created container and a link to the container's location
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List not found</exception>
+    /// <exception cref="DuplicateContainerException">Container with same name already exists</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task<(PackedContainer, string)> CreateContainerAsync(int listId, string name);
+
+    /// <summary>
+    /// Get a specific container
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="containerId">Container ID</param>
+    /// <returns>
+    /// The specified container
+    /// </returns>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task<PackedContainer> GetContainerAsync(int listId, int containerId);
+
+    /// <summary>
+    /// Update a container
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="containerId">Container ID</param>
+    /// <param name="updatedName">Updated container name</param>
+    /// <returns>
+    /// A representation of the updated container
+    /// </returns>
+    /// <exception cref="DuplicateContainerException">Container with name already exists</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task<PackedContainer> UpdateContainerAsync(int listId, int containerId, string updatedName);
+
+    /// <summary>
+    /// Delete a container
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="containerId">Container ID</param>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    Task DeleteContainerAsync(int listId, int containerId);
+
+    #endregion CONTAINERS
 }

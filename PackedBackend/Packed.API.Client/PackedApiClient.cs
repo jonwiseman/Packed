@@ -533,4 +533,250 @@ public class PackedApiClient : IPackedApiClient
     }
 
     #endregion ITEMS
+
+    #region CONTAINERS
+
+    /// <summary>
+    /// Get all containers belonging to a specific list
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <returns>
+    /// All existing containers
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List could not be found</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    public async Task<IEnumerable<PackedContainer>> GetContainersForListAsync(int listId)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Get, $"lists/{listId}/containers")
+        {
+            Headers = { { "Accept", "application/json" } }
+        };
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        return response.StatusCode switch
+        {
+            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<List<PackedContainer>>(),
+
+            HttpStatusCode.NotFound => throw new ListNotFoundException($"List with ID {listId} could not be found"),
+
+            // Errors documented in OpenAPI specification
+            HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.InternalServerError =>
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>()),
+
+            // Errors which are not documented and that we can't get any information out of
+            _ => throw new HttpRequestException(
+                $"Response with unexpected status code returned from request to {request.RequestUri}")
+        };
+    }
+
+    /// <summary>
+    /// Create a new container
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="name">Container name</param>
+    /// <returns>
+    /// A representation of the created container and a link to the container's location
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List not found</exception>
+    /// <exception cref="DuplicateContainerException">Container with same name already exists</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    public async Task<(PackedContainer, string)> CreateContainerAsync(int listId, string name)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Post, $"lists/{listId}/containers")
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(new
+                    {
+                        name
+                    },
+                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }),
+                Encoding.UTF8, "application/json")
+        };
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        return response.StatusCode switch
+        {
+            // API should return representation of created container
+            HttpStatusCode.Created => (await stream.ReadAndDeserializeFromJson<PackedContainer>(),
+                response.Headers.Location?.ToString() ?? string.Empty),
+
+            HttpStatusCode.NotFound =>
+                throw new ListNotFoundException($"List with ID {listId} not found"),
+
+            // Container with same name already exists
+            HttpStatusCode.Conflict =>
+                throw new DuplicateContainerException($"Container with name {name} already exists"),
+
+            // Errors documented in OpenAPI specification
+            HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.InternalServerError =>
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>()),
+
+            // Errors which are not documented and that we can't get any information out of
+            _ => throw new HttpRequestException(
+                $"Response with unexpected status code returned from request to {request.RequestUri}")
+        };
+    }
+
+    /// <summary>
+    /// Get a specific container
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="containerId">Container ID</param>
+    /// <returns>
+    /// The specified container
+    /// </returns>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    public async Task<PackedContainer> GetContainerAsync(int listId, int containerId)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Get, $"lists/{listId}/containers/{containerId}")
+        {
+            Headers = { { "Accept", "application/json" } }
+        };
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        return response.StatusCode switch
+        {
+            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<PackedContainer>(),
+
+            // Errors documented in OpenAPI specification
+            HttpStatusCode.NotFound or HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized
+                or HttpStatusCode.InternalServerError =>
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>()),
+
+            // Errors which are not documented and that we can't get any information out of
+            _ => throw new HttpRequestException(
+                $"Response with unexpected status code returned from request to {request.RequestUri}")
+        };
+    }
+
+    /// <summary>
+    /// Update a container
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="containerId">Container ID</param>
+    /// <param name="updatedName">Updated container name</param>
+    /// <returns>
+    /// A representation of the updated container
+    /// </returns>
+    /// <exception cref="DuplicateContainerException">Container with name already exists</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    public async Task<PackedContainer> UpdateContainerAsync(int listId, int containerId, string updatedName)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Put, $"lists/{listId}/containers/{containerId}")
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(new
+                    {
+                        name = updatedName
+                    },
+                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }),
+                Encoding.UTF8, "application/json")
+        };
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        return response.StatusCode switch
+        {
+            // API should return representation of created container
+            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<PackedContainer>(),
+
+            // Container with same name already exists
+            HttpStatusCode.Conflict =>
+                throw new DuplicateContainerException($"Container with name {updatedName} already exists"),
+
+            // Errors documented in OpenAPI specification
+            HttpStatusCode.NotFound or HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized
+                or HttpStatusCode.InternalServerError =>
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>()),
+
+            // Errors which are not documented and that we can't get any information out of
+            _ => throw new HttpRequestException(
+                $"Response with unexpected status code returned from request to {request.RequestUri}")
+        };
+    }
+
+    /// <summary>
+    /// Delete a container
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="containerId">Container ID</param>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    public async Task DeleteContainerAsync(int listId, int containerId)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"lists/{listId}/containers/{containerId}");
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        switch (response.StatusCode)
+        {
+            case HttpStatusCode.NoContent:
+                return;
+            case HttpStatusCode.NotFound:
+            case HttpStatusCode.BadRequest:
+            case HttpStatusCode.Unauthorized:
+            case HttpStatusCode.InternalServerError:
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>());
+            default:
+                throw new HttpRequestException(
+                    $"Response with unexpected status code returned from request to {request.RequestUri}");
+        }
+    }
+
+    #endregion CONTAINERS
 }
