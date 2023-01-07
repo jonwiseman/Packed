@@ -118,5 +118,20 @@ public interface IPackedApiClient
     /// <exception cref="HttpRequestException">Unrecognized API error</exception>
     Task<PackedItem> GetItemFromList(int listId, int itemId);
 
+    /// <summary>
+    /// Update an item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <param name="newName">New name of item</param>
+    /// <param name="newQuantity">New quantity of item</param>
+    /// <returns>
+    /// A representation of the updated item
+    /// </returns>
+    /// <exception cref="DuplicateItemException">Item with same name already exists</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task<PackedItem> UpdateItem(int listId, int itemId, string newName, int newQuantity);
+
     #endregion ITEMS
 }

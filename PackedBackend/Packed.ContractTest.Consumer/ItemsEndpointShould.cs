@@ -79,7 +79,7 @@ public class ItemsEndpointShould : ContractTestBase
     {
         // Arrange
         PactBuilder
-            .UponReceiving("A POST request to add a new list")
+            .UponReceiving("A POST request to add a new item")
             .Given(ProviderStates.SpecificListExists)
             .WithRequest(HttpMethod.Post, $"/lists/{StandardList.Id}/items")
             .WithHeader("Content-Type", "application/json; charset=utf-8")
@@ -161,6 +161,61 @@ public class ItemsEndpointShould : ContractTestBase
 
             // Ensure placement deserialized correctly
             var placement = item.Placements.Single();
+            Assert.AreEqual(StandardPlacement.Id, placement.Id);
+            Assert.AreEqual(StandardPlacement.ContainerId, placement.ContainerId);
+        });
+    }
+
+    /// <summary>
+    /// Test to ensure that an item can be updated
+    /// </summary>
+    [TestMethod]
+    public async Task UpdateItem()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving("A PUT request to update an item")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Put, $"/lists/{StandardList.Id}/items/{StandardItem.Id}")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                name = $"{StandardItem.Name} 2",
+                quantity = StandardItem.Quantity + 1
+            })
+            .WillRespond()
+            .WithStatus(HttpStatusCode.OK)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                itemId = Match.Integer(StandardItem.Id),
+                name = $"{StandardItem.Name} 2",
+                quantity = StandardItem.Quantity + 1,
+                placements = new MinMaxTypeMatcher(new
+                {
+                    placementId = new TypeMatcher(StandardPlacement.Id),
+                    containerId = new TypeMatcher(StandardPlacement.ContainerId)
+                }, 1)
+            });
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            var updatedItem = await client.UpdateItem(StandardList.Id, StandardItem.Id, $"{StandardItem.Name} 2",
+                StandardItem.Quantity + 1);
+
+            // Assert
+            Assert.IsNotNull(updatedItem);
+            Assert.AreEqual(StandardItem.Id, updatedItem.Id);
+            Assert.AreEqual($"{StandardItem.Name} 2", updatedItem.Name);
+            Assert.AreEqual(StandardItem.Quantity + 1, updatedItem.Quantity);
+
+            // Ensure placement deserialized correctly
+            var placement = updatedItem.Placements.Single();
             Assert.AreEqual(StandardPlacement.Id, placement.Id);
             Assert.AreEqual(StandardPlacement.ContainerId, placement.ContainerId);
         });
