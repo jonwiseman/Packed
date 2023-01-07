@@ -178,5 +178,30 @@ public class ContainersEndpointShould : ContractTestBase
         });
     }
 
+    /// <summary>
+    /// Test to ensure that a container can be deleted
+    /// </summary>
+    [TestMethod]
+    public async Task DeleteContainer()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving("A DELETE request to remove a container")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Delete, $"/lists/{StandardList.Id}/containers/{StandardContainer.Id}")
+            .WillRespond()
+            .WithStatus(HttpStatusCode.NoContent);
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            await client.DeleteContainerAsync(StandardList.Id, StandardContainer.Id);
+        });
+    }
+
     #endregion TEST METHODS
 }
