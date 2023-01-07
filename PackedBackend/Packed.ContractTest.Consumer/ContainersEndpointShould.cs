@@ -58,5 +58,46 @@ public class ContainersEndpointShould : ContractTestBase
         });
     }
 
+    /// <summary>
+    /// Test to ensure that new containers can be created
+    /// </summary>
+    [TestMethod]
+    public async Task CreateNewContainer()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving("A POST request to create a new container")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Post, $"/lists/{StandardList.Id}/containers")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                name = $"{StandardContainer.Name} 2"
+            })
+            .WillRespond()
+            .WithStatus(HttpStatusCode.Created)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                containerId = Match.Integer(1),
+                name = $"{StandardContainer.Name} 2"
+            });
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            var (container, _) = await client.CreateContainerAsync(StandardList.Id,
+                $"{StandardContainer.Name} 2");
+
+            // Assert
+            Assert.IsNotNull(container);
+            Assert.AreEqual($"{StandardContainer.Name} 2", container.Name);
+        });
+    }
+
     #endregion TEST METHODS
 }
