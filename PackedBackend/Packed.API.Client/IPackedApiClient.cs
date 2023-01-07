@@ -104,7 +104,7 @@ public interface IPackedApiClient
     /// <exception cref="DuplicateItemException">Item with same name already in list</exception>
     /// <exception cref="PackedApiClientException">Recognized API exception</exception>
     /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
-    Task<(PackedItem, string)> CreateItemForList(int listId, string name, int quantity);
+    Task<(PackedItem, string)> CreateItemForListAsync(int listId, string name, int quantity);
 
     /// <summary>
     /// Retrieve a specific item from the specified list
@@ -116,7 +116,7 @@ public interface IPackedApiClient
     /// </returns>
     /// <exception cref="PackedApiClientException">Recognized API error</exception>
     /// <exception cref="HttpRequestException">Unrecognized API error</exception>
-    Task<PackedItem> GetItemFromList(int listId, int itemId);
+    Task<PackedItem> GetItemFromListAsync(int listId, int itemId);
 
     /// <summary>
     /// Update an item
@@ -131,7 +131,16 @@ public interface IPackedApiClient
     /// <exception cref="DuplicateItemException">Item with same name already exists</exception>
     /// <exception cref="PackedApiClientException">Recognized API exception</exception>
     /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
-    Task<PackedItem> UpdateItem(int listId, int itemId, string newName, int newQuantity);
+    Task<PackedItem> UpdateItemAsync(int listId, int itemId, string newName, int newQuantity);
+
+    /// <summary>
+    /// Delete an item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task DeleteItemAsync(int listId, int itemId);
 
     #endregion ITEMS
 }

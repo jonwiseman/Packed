@@ -344,7 +344,7 @@ public class PackedApiClient : IPackedApiClient
     /// <exception cref="DuplicateItemException">Item with same name already in list</exception>
     /// <exception cref="PackedApiClientException">Recognized API exception</exception>
     /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
-    public async Task<(PackedItem, string)> CreateItemForList(int listId, string name, int quantity)
+    public async Task<(PackedItem, string)> CreateItemForListAsync(int listId, string name, int quantity)
     {
         // Create request message with body
         var request = new HttpRequestMessage(HttpMethod.Post, $"lists/{listId}/items")
@@ -402,7 +402,7 @@ public class PackedApiClient : IPackedApiClient
     /// </returns>
     /// <exception cref="PackedApiClientException">Recognized API error</exception>
     /// <exception cref="HttpRequestException">Unrecognized API error</exception>
-    public async Task<PackedItem> GetItemFromList(int listId, int itemId)
+    public async Task<PackedItem> GetItemFromListAsync(int listId, int itemId)
     {
         // Create request message with body
         var request = new HttpRequestMessage(HttpMethod.Get, $"lists/{listId}/items/{itemId}")
@@ -450,7 +450,7 @@ public class PackedApiClient : IPackedApiClient
     /// <exception cref="DuplicateItemException">Item with same name already exists</exception>
     /// <exception cref="PackedApiClientException">Recognized API exception</exception>
     /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
-    public async Task<PackedItem> UpdateItem(int listId, int itemId, string newName, int newQuantity)
+    public async Task<PackedItem> UpdateItemAsync(int listId, int itemId, string newName, int newQuantity)
     {
         // Create request message with body
         var request = new HttpRequestMessage(HttpMethod.Put, $"lists/{listId}/items/{itemId}")
@@ -493,6 +493,44 @@ public class PackedApiClient : IPackedApiClient
             _ => throw new HttpRequestException(
                 $"Response with unexpected status code returned from request to {request.RequestUri}")
         };
+    }
+
+    /// <summary>
+    /// Delete an item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    public async Task DeleteItemAsync(int listId, int itemId)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"lists/{listId}/items/{itemId}");
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        switch (response.StatusCode)
+        {
+            case HttpStatusCode.NoContent:
+                return;
+            case HttpStatusCode.NotFound:
+            case HttpStatusCode.BadRequest:
+            case HttpStatusCode.Unauthorized:
+            case HttpStatusCode.InternalServerError:
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>());
+            default:
+                throw new HttpRequestException(
+                    $"Response with unexpected status code returned from request to {request.RequestUri}");
+        }
     }
 
     #endregion ITEMS

@@ -106,7 +106,7 @@ public class ItemsEndpointShould : ContractTestBase
             var client = new PackedApiClient(httpClient);
 
             // Act
-            var (item, _) = await client.CreateItemForList(StandardList.Id, $"{StandardItem.Name} 2",
+            var (item, _) = await client.CreateItemForListAsync(StandardList.Id, $"{StandardItem.Name} 2",
                 StandardItem.Quantity);
 
             // Assert
@@ -152,7 +152,7 @@ public class ItemsEndpointShould : ContractTestBase
             var client = new PackedApiClient(httpClient);
 
             // Act
-            var item = await client.GetItemFromList(StandardList.Id, StandardItem.Id);
+            var item = await client.GetItemFromListAsync(StandardList.Id, StandardItem.Id);
 
             // Assert
             Assert.AreEqual(StandardItem.Id, item.Id);
@@ -205,7 +205,7 @@ public class ItemsEndpointShould : ContractTestBase
             var client = new PackedApiClient(httpClient);
 
             // Act
-            var updatedItem = await client.UpdateItem(StandardList.Id, StandardItem.Id, $"{StandardItem.Name} 2",
+            var updatedItem = await client.UpdateItemAsync(StandardList.Id, StandardItem.Id, $"{StandardItem.Name} 2",
                 StandardItem.Quantity + 1);
 
             // Assert
@@ -218,6 +218,31 @@ public class ItemsEndpointShould : ContractTestBase
             var placement = updatedItem.Placements.Single();
             Assert.AreEqual(StandardPlacement.Id, placement.Id);
             Assert.AreEqual(StandardPlacement.ContainerId, placement.ContainerId);
+        });
+    }
+
+    /// <summary>
+    /// Test to ensure an item can be deleted
+    /// </summary>
+    [TestMethod]
+    public async Task DeleteItem()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving("A DELETE request for a specific item")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Delete, $"/lists/{StandardList.Id}/items/{StandardItem.Id}")
+            .WillRespond()
+            .WithStatus(HttpStatusCode.NoContent);
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            await client.DeleteItemAsync(StandardList.Id, StandardItem.Id);
         });
     }
 
