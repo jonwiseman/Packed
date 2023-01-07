@@ -34,8 +34,8 @@ public class ContainersEndpointShould : ContractTestBase
             .WithHeader("Content-Type", "application/json")
             .WithJsonBody(new MinMaxTypeMatcher(new
             {
-                containerId = new TypeMatcher(StandardContainer.Id),
-                name = new TypeMatcher(StandardContainer.Name)
+                containerId = Match.Integer(StandardContainer.Id),
+                name = Match.Type(StandardContainer.Name)
             }, 1));
 
         await PactBuilder.VerifyAsync(async ctx =>
@@ -79,7 +79,7 @@ public class ContainersEndpointShould : ContractTestBase
             .WithHeader("Content-Type", "application/json")
             .WithJsonBody(new
             {
-                containerId = Match.Integer(1),
+                containerId = Match.Integer(StandardContainer.Id),
                 name = $"{StandardContainer.Name} 2"
             });
 
@@ -96,6 +96,43 @@ public class ContainersEndpointShould : ContractTestBase
             // Assert
             Assert.IsNotNull(container);
             Assert.AreEqual($"{StandardContainer.Name} 2", container.Name);
+        });
+    }
+
+    /// <summary>
+    /// Test to ensure that a specific container can be retrieved
+    /// </summary>
+    [TestMethod]
+    public async Task GetSpecificContainer()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving("A GET request for a specific container")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Get, $"/lists/{StandardList.Id}/containers/{StandardContainer.Id}")
+            .WithHeader("Accept", "application/json")
+            .WillRespond()
+            .WithStatus(HttpStatusCode.OK)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                containerId = Match.Integer(StandardContainer.Id),
+                name = Match.Type(StandardContainer.Name)
+            });
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            var container = await client.GetContainerAsync(StandardList.Id, StandardContainer.Id);
+
+            // Assert
+            Assert.IsNotNull(container);
+            Assert.AreEqual(StandardContainer.Id, container.Id);
+            Assert.AreEqual(StandardContainer.Name, container.Name);
         });
     }
 
