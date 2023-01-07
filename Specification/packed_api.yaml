@@ -246,6 +246,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":

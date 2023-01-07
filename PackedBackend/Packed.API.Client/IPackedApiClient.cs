@@ -76,4 +76,71 @@ public interface IPackedApiClient
     Task DeleteListAsync(int listId);
 
     #endregion LISTS
+
+    #region ITEMS
+
+    /// <summary>
+    /// Get all items for the given list
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <returns>
+    /// All items belonging to the specified list
+    /// </returns>
+    /// <exception cref="ListNotFoundException">The list could not be found</exception>
+    /// <exception cref="PackedApiClientException">Encountered a documented API error</exception>
+    /// <exception cref="HttpRequestException">Encountered an undocumented API error</exception>
+    Task<IEnumerable<PackedItem>> GetItemsForListAsync(int listId);
+
+    /// <summary>
+    /// Create a new item in the specified list
+    /// </summary>
+    /// <param name="listId">ID of list to add item to</param>
+    /// <param name="name">Name of new item</param>
+    /// <param name="quantity">New item quantity</param>
+    /// <returns>
+    /// A representation of the new item and a link to the location of the new item
+    /// </returns>
+    /// <exception cref="ListNotFoundException">List could not be found</exception>
+    /// <exception cref="DuplicateItemException">Item with same name already in list</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task<(PackedItem, string)> CreateItemForListAsync(int listId, string name, int quantity);
+
+    /// <summary>
+    /// Retrieve a specific item from the specified list
+    /// </summary>
+    /// <param name="listId">List to retrieve item from</param>
+    /// <param name="itemId">ID of item to retrieve</param>
+    /// <returns>
+    /// The specified item
+    /// </returns>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    Task<PackedItem> GetItemFromListAsync(int listId, int itemId);
+
+    /// <summary>
+    /// Update an item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <param name="newName">New name of item</param>
+    /// <param name="newQuantity">New quantity of item</param>
+    /// <returns>
+    /// A representation of the updated item
+    /// </returns>
+    /// <exception cref="DuplicateItemException">Item with same name already exists</exception>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task<PackedItem> UpdateItemAsync(int listId, int itemId, string newName, int newQuantity);
+
+    /// <summary>
+    /// Delete an item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <exception cref="PackedApiClientException">Recognized API exception</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API exception</exception>
+    Task DeleteItemAsync(int listId, int itemId);
+
+    #endregion ITEMS
 }
