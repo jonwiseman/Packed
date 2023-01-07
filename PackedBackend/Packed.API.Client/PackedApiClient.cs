@@ -722,7 +722,7 @@ public class PackedApiClient : IPackedApiClient
         // Based on the status code, either attempt to deserialize the response stream or throw an exception
         return response.StatusCode switch
         {
-            // API should return representation of created container
+            // API should return representation of updated container
             HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<PackedContainer>(),
 
             // Container with same name already exists
