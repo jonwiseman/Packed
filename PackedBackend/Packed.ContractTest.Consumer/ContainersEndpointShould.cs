@@ -136,5 +136,47 @@ public class ContainersEndpointShould : ContractTestBase
         });
     }
 
+    /// <summary>
+    /// Test to ensure that containers can be updated
+    /// </summary>
+    [TestMethod]
+    public async Task UpdateContainer()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving("A PUT request to update a container")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Put, $"/lists/{StandardList.Id}/containers/{StandardContainer.Id}")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                name = $"{StandardContainer.Name} 2"
+            })
+            .WillRespond()
+            .WithStatus(HttpStatusCode.OK)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                containerId = Match.Integer(StandardContainer.Id),
+                name = $"{StandardContainer.Name} 2"
+            });
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            var container = await client.UpdateContainerAsync(StandardList.Id, StandardContainer.Id,
+                $"{StandardContainer.Name} 2");
+
+            // Assert
+            Assert.IsNotNull(container);
+            Assert.AreEqual(StandardContainer.Id, container.Id);
+            Assert.AreEqual($"{StandardContainer.Name} 2", container.Name);
+        });
+    }
+
     #endregion TEST METHODS
 }
