@@ -100,5 +100,31 @@ public class PlacementsEndpointShould : ContractTestBase
         });
     }
 
+    /// <summary>
+    /// Test to ensure that a placement can be deleted
+    /// </summary>
+    [TestMethod]
+    public async Task DeletePlacement()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving("A DELETE request to remove a placement")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Delete,
+                $"/lists/{StandardList.Id}/items/{StandardItem.Id}/placements/{StandardPlacement.Id}")
+            .WillRespond()
+            .WithStatus(HttpStatusCode.NoContent);
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            await client.DeletePlacementAsync(StandardList.Id, StandardItem.Id, StandardPlacement.Id);
+        });
+    }
+
     #endregion TEST METHODS
 }
