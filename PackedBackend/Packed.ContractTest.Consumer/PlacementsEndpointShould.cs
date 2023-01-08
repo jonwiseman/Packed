@@ -59,5 +59,46 @@ public class PlacementsEndpointShould : ContractTestBase
         });
     }
 
+    /// <summary>
+    /// Test to ensure that new placements can be created
+    /// </summary>
+    [TestMethod]
+    public async Task CreateNewPlacement()
+    {
+        // Arrange
+        PactBuilder
+            .UponReceiving("A POST request to add a new placement")
+            .Given(ProviderStates.SpecificListExists)
+            .WithRequest(HttpMethod.Post, $"/lists/{StandardList.Id}/items/{StandardItem.Id}/placements")
+            .WithHeader("Content-Type", "application/json; charset=utf-8")
+            .WithJsonBody(new
+            {
+                containerId = StandardContainer.Id
+            })
+            .WillRespond()
+            .WithStatus(HttpStatusCode.Created)
+            .WithHeader("Content-Type", "application/json")
+            .WithJsonBody(new
+            {
+                placementId = Match.Integer(StandardPlacement.Id),
+                containerId = StandardContainer.Id
+            });
+
+        await PactBuilder.VerifyAsync(async ctx =>
+        {
+            var httpClient = HttpClientFactory.Create();
+            httpClient.BaseAddress = ctx.MockServerUri;
+            var client = new PackedApiClient(httpClient);
+
+            // Act
+            var (placement, _) = await client.CreatePlacementAsync(StandardList.Id, StandardItem.Id,
+                StandardContainer.Id);
+
+            // Assert
+            Assert.IsNotNull(placement);
+            Assert.AreEqual(StandardPlacement.ContainerId, placement.ContainerId);
+        });
+    }
+
     #endregion TEST METHODS
 }
