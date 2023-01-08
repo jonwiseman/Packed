@@ -32,7 +32,7 @@ namespace Packed.ContractTest.Shared
             Id = 1,
             ListId = 1,
             Name = "First item",
-            Quantity = 1,
+            Quantity = 2,
             Placements = new List<Placement>
             {
                 StandardPlacement

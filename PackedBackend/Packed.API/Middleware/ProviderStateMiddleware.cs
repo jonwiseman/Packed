@@ -24,10 +24,6 @@ public class ProviderStateMiddleware
         _providerStateActions = new Dictionary<string, Action<IDictionary<string, string>, Mock<IListRepository>>>()
         {
             {
-                ProviderStates.ListExists.ToLower(),
-                EnsureOneListExists
-            },
-            {
                 ProviderStates.SpecificListExists.ToLower(),
                 EnsureSpecificListExists
             }
@@ -127,6 +123,13 @@ public class ProviderStateMiddleware
     private static void EnsureSpecificListExists(IDictionary<string, string> parameters,
         Mock<IListRepository> listRepositoryMock)
     {
+        listRepositoryMock
+            .Setup(r => r.GetAllListsAsync())
+            .ReturnsAsync(new List<List>
+            {
+                ContractTestData.StandardList
+            });
+
         listRepositoryMock
             .Setup(r => r.GetListByIdAsync(It.IsAny<int>()))
             .ReturnsAsync(ContractTestData.StandardList);

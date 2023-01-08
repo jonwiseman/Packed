@@ -27,7 +27,7 @@ public class ListsEndpointShould : ContractTestBase
         // Arrange
         PactBuilder
             .UponReceiving("A GET request to retrieve all lists")
-            .Given(ProviderStates.ListExists)
+            .Given(ProviderStates.SpecificListExists)
             .WithRequest(HttpMethod.Get, "/lists")
             .WithHeader("Accept", "application/json")
             .WillRespond()

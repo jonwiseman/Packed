@@ -9,11 +9,6 @@ namespace Packed.ContractTest.Shared
     public static class ProviderStates
     {
         /// <summary>
-        /// State where one list exists
-        /// </summary>
-        public const string ListExists = "there is at least one list";
-
-        /// <summary>
         /// State where one specific list exists
         /// </summary>
         public const string SpecificListExists = "a specific list exists";
