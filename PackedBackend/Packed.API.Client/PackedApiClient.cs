@@ -15,6 +15,9 @@ namespace Packed.API.Client;
 /// <summary>
 /// Client which provides a means of making requests to the Packed API
 /// </summary>
+/// <remarks>
+/// TODO: add common base methods
+/// </remarks>
 public class PackedApiClient : IPackedApiClient
 {
     #region FIELDS
@@ -779,4 +782,146 @@ public class PackedApiClient : IPackedApiClient
     }
 
     #endregion CONTAINERS
+
+    #region PLACEMENTS
+
+    /// <summary>
+    /// Get all placements for the given item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <returns>
+    /// All placements
+    /// </returns>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    public async Task<IEnumerable<PackedPlacement>> GetPlacementsAsync(int listId, int itemId)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Get, $"lists/{listId}/items/{itemId}/placements")
+        {
+            Headers = { { "Accept", "application/json" } }
+        };
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        return response.StatusCode switch
+        {
+            HttpStatusCode.OK => await stream.ReadAndDeserializeFromJson<List<PackedPlacement>>(),
+
+            // Errors documented in OpenAPI specification
+            HttpStatusCode.NotFound or HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized
+                or HttpStatusCode.InternalServerError =>
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>()),
+
+            // Errors which are not documented and that we can't get any information out of
+            _ => throw new HttpRequestException(
+                $"Response with unexpected status code returned from request to {request.RequestUri}")
+        };
+    }
+
+    /// <summary>
+    /// Create a new placement
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <param name="containerId">Container ID</param>
+    /// <returns></returns>
+    /// <exception cref="ItemQuantityException">Too many placements</exception>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    public async Task<(PackedPlacement, string)> CreatePlacementAsync(int listId, int itemId, int containerId)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Post, $"lists/{listId}/items/{itemId}/placements")
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(new
+                    {
+                        containerId
+                    },
+                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }),
+                Encoding.UTF8, "application/json")
+        };
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        return response.StatusCode switch
+        {
+            // API should return representation of created placement
+            HttpStatusCode.Created => (await stream.ReadAndDeserializeFromJson<PackedPlacement>(),
+                response.Headers.Location?.ToString() ?? string.Empty),
+
+            HttpStatusCode.Conflict =>
+                throw new ItemQuantityException($"Item with ID {itemId} has too many placements"),
+
+            // Errors documented in OpenAPI specification
+            HttpStatusCode.NotFound or HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized
+                or HttpStatusCode.InternalServerError =>
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>()),
+
+            // Errors which are not documented and that we can't get any information out of
+            _ => throw new HttpRequestException(
+                $"Response with unexpected status code returned from request to {request.RequestUri}")
+        };
+    }
+
+    /// <summary>
+    /// Delete a placement
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <param name="placementId">Placement ID</param>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    public async Task DeletePlacementAsync(int listId, int itemId, int placementId)
+    {
+        // Create request message with body
+        var request = new HttpRequestMessage(HttpMethod.Delete,
+            $"lists/{listId}/items/{itemId}/placements/{placementId}");
+
+        // Initialize a token source
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        // Send request and wait for response
+        var response =
+            await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+
+        // Open stream to response
+        await using var stream = await response.Content.ReadAsStreamAsync();
+
+        // Based on the status code, either attempt to deserialize the response stream or throw an exception
+        switch (response.StatusCode)
+        {
+            case HttpStatusCode.NoContent:
+                return;
+            case HttpStatusCode.NotFound:
+            case HttpStatusCode.BadRequest:
+            case HttpStatusCode.Unauthorized:
+            case HttpStatusCode.InternalServerError:
+                throw new PackedApiClientException(await stream.ReadAndDeserializeFromJson<PackedApiError>());
+            default:
+                throw new HttpRequestException(
+                    $"Response with unexpected status code returned from request to {request.RequestUri}");
+        }
+    }
+
+    #endregion PLACEMENTS
 }

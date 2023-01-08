@@ -208,4 +208,42 @@ public interface IPackedApiClient
     Task DeleteContainerAsync(int listId, int containerId);
 
     #endregion CONTAINERS
+
+    #region PLACEMENTS
+
+    /// <summary>
+    /// Get all placements for the given item
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <returns>
+    /// All placements
+    /// </returns>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    Task<IEnumerable<PackedPlacement>> GetPlacementsAsync(int listId, int itemId);
+
+    /// <summary>
+    /// Create a new placement
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <param name="containerId">Container ID</param>
+    /// <returns></returns>
+    /// <exception cref="ItemQuantityException">Too many placements</exception>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    Task<(PackedPlacement, string)> CreatePlacementAsync(int listId, int itemId, int containerId);
+
+    /// <summary>
+    /// Delete a placement
+    /// </summary>
+    /// <param name="listId">List ID</param>
+    /// <param name="itemId">Item ID</param>
+    /// <param name="placementId">Placement ID</param>
+    /// <exception cref="PackedApiClientException">Recognized API error</exception>
+    /// <exception cref="HttpRequestException">Unrecognized API error</exception>
+    Task DeletePlacementAsync(int listId, int itemId, int placementId);
+
+    #endregion PLACEMENTS
 }
